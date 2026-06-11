@@ -202,22 +202,14 @@ function DriftingPattern({ reverse = false, duration = 40, scale = 1, blur = 4, 
           top: -TILE_H, bottom: -TILE_H, left: -TILE_W, right: -TILE_W,
           backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
           backgroundSize: `24px 24px, 6px 6px, ${TILE_W}px ${TILE_H}px`,
+          // Static filter — rasterised once, then the layer only *moves*
+          // (transform-only animation = GPU compositing, no repaints).
           filter: `blur(${blur}px) saturate(1.25)`,
           opacity,
-          willChange: 'transform, filter',
+          willChange: 'transform',
         }}
-        animate={prefersReduced ? {} : {
-          x: reverse ? [-TILE_W, 0] : [0, -TILE_W],
-          filter: [
-            `blur(${blur}px) saturate(1.25) hue-rotate(0deg)`,
-            `blur(${blur}px) saturate(1.35) hue-rotate(180deg)`,
-            `blur(${blur}px) saturate(1.25) hue-rotate(360deg)`,
-          ],
-        }}
-        transition={{
-          x:      { duration, repeat: Infinity, ease: 'linear' },
-          filter: { duration: 52, repeat: Infinity, ease: 'linear' },
-        }}
+        animate={prefersReduced ? {} : { x: reverse ? [-TILE_W, 0] : [0, -TILE_W] }}
+        transition={{ x: { duration, repeat: Infinity, ease: 'linear' } }}
       />
     </div>
   )
@@ -225,7 +217,7 @@ function DriftingPattern({ reverse = false, duration = 40, scale = 1, blur = 4, 
 
 // Twinkling night sky over Samarkand — tiny "data points" of the future.
 // Generated once at module load so the layout is stable across re-renders.
-const STARS = Array.from({ length: 44 }, (_, i) => ({
+const STARS = Array.from({ length: 26 }, (_, i) => ({
   id: i,
   left: Math.random() * 100,
   top: Math.random() * 55,
@@ -259,10 +251,78 @@ function Stars() {
   )
 }
 
+// Torch that follows the pointer/finger. A circular window (static soft mask,
+// rasterised once) is moved with transform; the fabric inside is counter-
+// translated so it stays screen-aligned. Both ops are pure GPU compositing —
+// zero repaints per mouse move, perfectly glued to the cursor.
+function TorchReveal() {
+  const outerRef = useRef(null)
+  const innerRef = useRef(null)
+
+  useEffect(() => {
+    let raf = 0
+    let tx = -9999
+    let ty = -9999
+    const apply = () => {
+      raf = 0
+      const o = outerRef.current
+      const inn = innerRef.current
+      if (!o || !inn) return
+      o.style.transform = `translate3d(${tx - 260}px, ${ty - 260}px, 0)`
+      inn.style.transform = `translate3d(${260 - tx}px, ${260 - ty}px, 0)`
+    }
+    const schedule = (x, y) => {
+      tx = x; ty = y
+      if (!raf) raf = requestAnimationFrame(apply)
+    }
+    const onMove = (e) => schedule(e.clientX, e.clientY)
+    const onTouch = (e) => {
+      const t = e.touches[0]
+      if (t) schedule(t.clientX, t.clientY)
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    window.addEventListener('touchmove', onTouch, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('touchmove', onTouch)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  return (
+    <div
+      ref={outerRef}
+      style={{
+        position: 'absolute', left: 0, top: 0,
+        width: 520, height: 520,
+        transform: 'translate3d(-9999px, -9999px, 0)',
+        borderRadius: '50%',
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        WebkitMaskImage: 'radial-gradient(circle, #000 0%, rgba(0,0,0,0.5) 46%, transparent 72%)',
+        maskImage: 'radial-gradient(circle, #000 0%, rgba(0,0,0,0.5) 46%, transparent 72%)',
+        willChange: 'transform',
+      }}
+    >
+      <div
+        ref={innerRef}
+        style={{
+          position: 'absolute', left: 0, top: 0,
+          width: '100vw', height: '100vh',
+          backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
+          backgroundSize: `24px 24px, 6px 6px, ${TILE_W}px ${TILE_H}px`,
+          filter: 'saturate(1.55)',
+          opacity: 0.5,
+          willChange: 'transform',
+        }}
+      />
+    </div>
+  )
+}
+
 function IkatBackground() {
   const prefersReduced = useReducedMotion()
   const coarse = useCoarsePointer()
-  const glowRef = useRef(null)
 
   // Scroll-driven drift: the whole fabric travels as the page moves.
   const { scrollYProgress } = useScroll()
@@ -298,30 +358,6 @@ function IkatBackground() {
     }
   }, [prefersReduced, coarse, tiltXRaw, tiltYRaw])
 
-  // Torch — sharper, brighter fabric revealed under pointer OR finger.
-  // Coordinates are written straight to the masked wrapper (which sits at
-  // inset:0, so clientX/clientY map 1:1) — no offset, no lag.
-  useEffect(() => {
-    if (prefersReduced) return
-    const setXY = (x, y) => {
-      const el = glowRef.current
-      if (!el) return
-      el.style.setProperty('--mx', `${x}px`)
-      el.style.setProperty('--my', `${y}px`)
-    }
-    const onMove = (e) => setXY(e.clientX, e.clientY)
-    // touchmove keeps firing during scroll, so the torch follows the finger
-    const onTouch = (e) => {
-      const t = e.touches[0]
-      if (t) setXY(t.clientX, t.clientY)
-    }
-    window.addEventListener('pointermove', onMove, { passive: true })
-    window.addEventListener('touchmove', onTouch, { passive: true })
-    return () => {
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('touchmove', onTouch)
-    }
-  }, [prefersReduced])
 
   return (
     <div
@@ -347,46 +383,8 @@ function IkatBackground() {
         </motion.div>
       </motion.div>
 
-      {/* Sharp vivid fabric under the cursor only.
-          The MASK lives on this stationary wrapper (inset 0 = viewport coords),
-          while the fabric drifts inside it — torch stays glued to the cursor. */}
-      {!prefersReduced && (
-        <div
-          ref={glowRef}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            overflow: 'hidden',
-            WebkitMaskImage:
-              'radial-gradient(circle 250px at var(--mx, -500px) var(--my, -500px), #000 0%, rgba(0,0,0,0.4) 45%, transparent 72%)',
-            maskImage:
-              'radial-gradient(circle 250px at var(--mx, -500px) var(--my, -500px), #000 0%, rgba(0,0,0,0.4) 45%, transparent 72%)',
-          }}
-        >
-          <motion.div
-            style={{
-              position: 'absolute',
-              top: -TILE_H, bottom: -TILE_H, left: -TILE_W, right: -TILE_W,
-              backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
-              backgroundSize: `24px 24px, 6px 6px, ${TILE_W}px ${TILE_H}px`,
-              filter: 'saturate(1.6)',
-              opacity: 0.55,
-              willChange: 'transform, filter',
-            }}
-            animate={{
-              x: [0, -TILE_W],
-              filter: [
-                'saturate(1.6) hue-rotate(0deg)',
-                'saturate(1.6) hue-rotate(360deg)',
-              ],
-            }}
-            transition={{
-              x:      { duration: 46, repeat: Infinity, ease: 'linear' },
-              filter: { duration: 52, repeat: Infinity, ease: 'linear' },
-            }}
-          />
-        </div>
-      )}
+      {/* Sharp vivid fabric revealed under the cursor / finger */}
+      {!prefersReduced && <TorchReveal />}
 
       {/* Holographic scanlines + travelling scan sweep — the "future" layer */}
       <div
@@ -425,28 +423,84 @@ function IkatBackground() {
 //  ANCIENT CITY SKYLINE — Registan silhouettes with neon hologram edges
 // ═══════════════════════════════════════════════════════════════════════════
 
-// A bright light-segment racing along an SVG path — the futuristic "energy"
-// tracing the ancient architecture. pathLength={1} normalises every path, so
-// dasharray fractions work regardless of real path length.
+// ── Authentic girih geometry generators ──────────────────────────────────────
+
+// Khatam — the classic 8-pointed star of two interlaced squares, drawn as one
+// 16-vertex star polygon (inner radius = exact square-intersection point).
+function star8Path(cx, cy, r) {
+  const rIn = r * 0.765
+  let d = ''
+  for (let i = 0; i < 16; i++) {
+    const ang = (Math.PI / 8) * i - Math.PI / 2
+    const rr = i % 2 === 0 ? r : rIn
+    d += (i ? 'L' : 'M') + (cx + rr * Math.cos(ang)).toFixed(1) + ' ' + (cy + rr * Math.sin(ang)).toFixed(1)
+  }
+  return d + 'Z'
+}
+
+// Small rotated square (the "cross" filler between stars in girih bands)
+function diamondPath(cx, cy, r) {
+  return `M${cx} ${cy - r}L${cx + r} ${cy}L${cx} ${cy + r}L${cx - r} ${cy}Z`
+}
+
+// Vertical star-and-diamond chain — the strip ornament on portal pylons
+function starChainPath(cx, ys, starR, diaR) {
+  let d = ''
+  for (let i = 0; i < ys.length; i++) {
+    d += star8Path(cx, ys[i], starR)
+    if (i < ys.length - 1) d += diamondPath(cx, (ys[i] + ys[i + 1]) / 2, diaR)
+  }
+  return d
+}
+
+// Horizontal row of stars joined by diamonds — the portal frieze band
+function starBandPath(xs, y, starR, diaR) {
+  let d = ''
+  for (let i = 0; i < xs.length; i++) {
+    d += star8Path(xs[i], y, starR)
+    if (i < xs.length - 1) d += diamondPath((xs[i] + xs[i + 1]) / 2, y, diaR)
+  }
+  return d
+}
+
+// Kungura — the stepped crenellation crowning every Registan portal
+function kunguraPath(x0, x1, yBase, h = 11, tooth = 16) {
+  let d = `M${x0} ${yBase}`
+  for (let x = x0; x < x1; x += tooth) {
+    d += `L${x + tooth / 2} ${yBase - h}L${x + tooth} ${yBase}`
+  }
+  return d
+}
+
+// A bright light-segment racing along an SVG path. The full ornament stays
+// faintly visible (ghost stroke) and the light draws over it. Glow is faked
+// with a wide translucent under-stroke — no drop-shadow filters, which were
+// the main FPS killer.
 function TracePath({ d, stroke, width = 2, seg = 0.14, duration = 4, delay = 0, reverse = false }) {
   const prefersReduced = useReducedMotion()
   if (prefersReduced) {
     return <path d={d} stroke={stroke} strokeWidth={width} opacity={0.18} fill="none" />
   }
+  const shared = {
+    d,
+    pathLength: 1,
+    fill: 'none',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    strokeDasharray: `${seg} ${1 - seg}`,
+    initial: { strokeDashoffset: 0 },
+    animate: { strokeDashoffset: reverse ? 1 : -1 },
+    transition: { duration, delay, repeat: Infinity, ease: 'linear' },
+  }
   return (
-    <motion.path
-      d={d}
-      pathLength={1}
-      stroke={stroke}
-      strokeWidth={width}
-      fill="none"
-      strokeLinecap="round"
-      strokeDasharray={`${seg} ${1 - seg}`}
-      style={{ filter: `drop-shadow(0 0 5px ${stroke})` }}
-      initial={{ strokeDashoffset: 0 }}
-      animate={{ strokeDashoffset: reverse ? 1 : -1 }}
-      transition={{ duration, delay, repeat: Infinity, ease: 'linear' }}
-    />
+    <>
+      {/* ghost ornament — always faintly visible so the pattern reads */}
+      <path d={d} stroke={stroke} strokeWidth={width * 0.8} strokeOpacity="0.14" fill="none" strokeLinejoin="round" />
+      {/* wide soft under-stroke = cheap glow */}
+      <motion.path {...shared} stroke={stroke} strokeWidth={width * 3.4} strokeOpacity={0.22} />
+      {/* bright core */}
+      <motion.path {...shared} stroke={stroke} strokeWidth={width} />
+    </>
   )
 }
 
@@ -538,34 +592,35 @@ function Skyline() {
           <path d="M1384 120 Q1399 84 1414 120 Z" />
         </g>
 
-        {/* ── Racing light ornaments — Registan girih patterns drawn in neon ── */}
+        {/* ── Racing light over authentic girih ornaments ──
+            Khatam stars (two interlaced squares), star-and-diamond chains on
+            the pylons, a star frieze across the band, kungura crenellation —
+            the actual ornament vocabulary of Registan madrasahs. */}
         <g fill="none" strokeLinecap="round">
+          {/* kungura crenellation crowning the portal */}
+          <TracePath d={kunguraPath(320, 640, 118)} stroke="#22D3EE" width={1.8} seg={0.18} duration={5.5} />
           {/* portal frame loop */}
-          <TracePath d="M320 120 H640 V340 H320 Z" stroke="#22D3EE" width={2.4} seg={0.16} duration={5} />
+          <TracePath d="M320 120 H640 V340 H320 Z" stroke="#22D3EE" width={2.2} seg={0.16} duration={5} delay={0.4} />
           {/* pointed arch sweep */}
           <TracePath d="M400 340 V232 Q400 166 480 148 Q560 166 560 232 V340" stroke="#F59E0B" width={2.2} seg={0.2} duration={3.6} delay={0.6} />
-          {/* diamond girih lattice on the left portal face */}
-          <TracePath d="M330 160 L390 220 L330 280 L390 340" stroke="#DB2777" width={1.8} seg={0.22} duration={3.2} />
-          <TracePath d="M390 160 L330 220 L390 280 L330 340" stroke="#8B5CF6" width={1.8} seg={0.22} duration={3.2} reverse />
-          {/* diamond girih lattice on the right portal face */}
-          <TracePath d="M570 160 L630 220 L570 280 L630 340" stroke="#8B5CF6" width={1.8} seg={0.22} duration={3.2} delay={0.8} />
-          <TracePath d="M630 160 L570 220 L630 280 L570 340" stroke="#DB2777" width={1.8} seg={0.22} duration={3.2} delay={0.8} reverse />
-          {/* eight-point star over the arch (two counter-rotating squares) */}
-          <TracePath d="M471 119 H489 V137 H471 Z" stroke="#FACC15" width={1.5} seg={0.3} duration={2.6} />
-          <TracePath d="M480 115 L493 128 L480 141 L467 128 Z" stroke="#22D3EE" width={1.5} seg={0.3} duration={2.6} reverse />
+          {/* star frieze across the portal band */}
+          <TracePath d={starBandPath([366, 423, 480, 537, 594], 134, 10, 4.5)} stroke="#FACC15" width={1.4} seg={0.1} duration={7} />
+          {/* khatam star chains on both pylons */}
+          <TracePath d={starChainPath(360, [200, 290], 19, 8)} stroke="#DB2777" width={1.6} seg={0.12} duration={6} delay={0.8} />
+          <TracePath d={starChainPath(600, [200, 290], 19, 8)} stroke="#8B5CF6" width={1.6} seg={0.12} duration={6} delay={2.2} reverse />
           {/* dome ribs light up one after another */}
           <TracePath d="M850 108 Q800 180 790 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} />
           <TracePath d="M850 108 Q850 180 850 250" stroke="#FACC15" width={1.8} seg={0.3} duration={2.8} delay={0.5} />
           <TracePath d="M850 108 Q900 180 910 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} delay={1} />
-          {/* dome drum ring */}
-          <TracePath d="M760 250 H940" stroke="#F59E0B" width={1.6} seg={0.35} duration={2.2} delay={1.4} />
+          {/* star medallion on the dome drum */}
+          <TracePath d={star8Path(850, 295, 26)} stroke="#F59E0B" width={1.6} seg={0.22} duration={4} delay={1.2} />
           {/* light climbing the minarets */}
           <TracePath d="M150 340 L158 100" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} reverse />
           <TracePath d="M1418 340 L1410 120" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} delay={1.7} reverse />
-          {/* bazaar domes glow in sequence */}
-          <TracePath d="M1040 290 Q1040 260 1072 250 Q1104 260 1104 290" stroke="#FACC15" width={1.6} seg={0.4} duration={2.4} />
-          <TracePath d="M1124 290 Q1124 260 1156 250 Q1188 260 1188 290" stroke="#DB2777" width={1.6} seg={0.4} duration={2.4} delay={0.5} />
-          <TracePath d="M1208 290 Q1208 260 1240 250 Q1272 260 1272 290" stroke="#22D3EE" width={1.6} seg={0.4} duration={2.4} delay={1} />
+          {/* bazaar arcade: domes + a small star under each */}
+          <TracePath d={`M1040 290 Q1040 260 1072 250 Q1104 260 1104 290 ${star8Path(1072, 315, 11)}`} stroke="#FACC15" width={1.5} seg={0.25} duration={3.4} />
+          <TracePath d={`M1124 290 Q1124 260 1156 250 Q1188 260 1188 290 ${star8Path(1156, 315, 11)}`} stroke="#DB2777" width={1.5} seg={0.25} duration={3.4} delay={0.7} />
+          <TracePath d={`M1208 290 Q1208 260 1240 250 Q1272 260 1272 290 ${star8Path(1240, 315, 11)}`} stroke="#22D3EE" width={1.5} seg={0.25} duration={3.4} delay={1.4} />
         </g>
       </motion.svg>
     </div>
@@ -796,7 +851,7 @@ const SHAPES = {
 }
 
 const SHAPE_KEYS = ['rice', 'rice', 'riceGold', 'carrot', 'cumin', 'raisin', 'chickpea']
-const PARTICLE_COUNT = 34
+const PARTICLE_COUNT = 26
 
 // Stable particle layout, generated once at module load.
 const PARTICLES = Array.from({ length: PARTICLE_COUNT }, (_, i) => {
@@ -845,7 +900,10 @@ function FallingPiece({ p }) {
 
 function RiceRain() {
   const prefersReduced = useReducedMotion()
+  const coarse = useCoarsePointer()
   if (prefersReduced) return null
+  // Phones get a lighter shower — fewer animated layers, steadier FPS.
+  const list = coarse ? PARTICLES.slice(0, 14) : PARTICLES
 
   return (
     <div
@@ -858,7 +916,7 @@ function RiceRain() {
         zIndex: 'var(--z-particles)',
       }}
     >
-      {PARTICLES.map((p) => (
+      {list.map((p) => (
         <FallingPiece key={p.id} p={p} />
       ))}
     </div>
@@ -1277,9 +1335,7 @@ function PlovCard({ plov, index, onOrder }) {
       onPointerLeave={onLeave}
       style={{
         position: 'relative',
-        background: 'var(--panel-soft)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        background: 'rgba(32, 20, 48, 0.82)',
         border: `1px solid ${active ? 'rgba(34,211,238,0.45)' : 'var(--panel-line)'}`,
         borderRadius: 18,
         padding: '1.75rem 1.6rem 1.5rem',
@@ -1411,9 +1467,7 @@ function EraPanel({ era, fullWidth = true }) {
         position: 'relative',
         maxWidth: 540,
         textAlign: 'center',
-        background: 'rgba(16,10,32,0.5)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        background: 'rgba(16,10,32,0.78)',
         border: `1px solid ${era.accent}3D`,
         borderRadius: 22,
         padding: 'clamp(1.8rem, 4vw, 2.8rem)',
@@ -1596,11 +1650,9 @@ function StatsStrip() {
         position: 'relative',
         zIndex: 'var(--z-content)',
         padding: 'clamp(2.5rem, 6vw, 4rem) clamp(1rem, 5vw, 3rem)',
-        background: 'linear-gradient(180deg, rgba(20,12,40,0.45) 0%, rgba(14,9,30,0.6) 100%)',
+        background: 'linear-gradient(180deg, rgba(20,12,40,0.7) 0%, rgba(14,9,30,0.82) 100%)',
         borderTop: '1px solid rgba(34,211,238,0.12)',
         borderBottom: '1px solid rgba(34,211,238,0.12)',
-        backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
       }}
     >
       <div style={{
@@ -2383,9 +2435,7 @@ export default function App() {
       <footer
         id="contacts"
         style={{
-          background: 'rgba(8,6,18,0.78)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)',
+          background: 'rgba(8,6,18,0.9)',
           borderTop: '1px solid rgba(34,211,238,0.14)',
           padding: 'clamp(2.5rem, 7vw, 4.5rem) clamp(1rem, 5vw, 3rem)',
           position: 'relative',
