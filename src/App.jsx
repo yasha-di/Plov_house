@@ -111,6 +111,10 @@ const IKAT_WARP =
 //  TOUCH / MOBILE HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Lite mode for weak machines: ≤4 GB RAM reported by the browser.
+// Cuts layer count, particle count and animated ornament traces.
+const IS_LITE = typeof navigator !== 'undefined' && (navigator.deviceMemory ?? 8) <= 4
+
 // True on phones & tablets (no hover, coarse pointer). Reactive to changes.
 const COARSE_QUERY = '(hover: none), (pointer: coarse)'
 
@@ -192,26 +196,29 @@ function TapRipples() {
 
 // One endlessly-drifting layer of the ikat tile. The x-loop spans exactly one
 // tile, so the wrap-around is invisible — the fabric just travels forever.
-function DriftingPattern({ reverse = false, duration = 40, scale = 1, blur = 4, opacity = 0.12 }) {
+// Depth comes from sizeScale (bigger background tiles), NOT from a transform
+// scale — scaled wrappers ballooned GPU layer memory and caused black-screen
+// flashes on macOS. Layer bounds stay as tight as the seamless loop allows.
+function DriftingPattern({ reverse = false, duration = 40, sizeScale = 1, blur = 3, opacity = 0.12 }) {
   const prefersReduced = useReducedMotion()
+  const w = Math.round(TILE_W * sizeScale)
+  const h = Math.round(TILE_H * sizeScale)
   return (
-    <div style={{ position: 'absolute', inset: '-6%', overflow: 'hidden', transform: `scale(${scale})` }}>
-      <motion.div
-        style={{
-          position: 'absolute',
-          top: -TILE_H, bottom: -TILE_H, left: -TILE_W, right: -TILE_W,
-          backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
-          backgroundSize: `24px 24px, 6px 6px, ${TILE_W}px ${TILE_H}px`,
-          // Static filter — rasterised once, then the layer only *moves*
-          // (transform-only animation = GPU compositing, no repaints).
-          filter: `blur(${blur}px) saturate(1.25)`,
-          opacity,
-          willChange: 'transform',
-        }}
-        animate={prefersReduced ? {} : { x: reverse ? [-TILE_W, 0] : [0, -TILE_W] }}
-        transition={{ x: { duration, repeat: Infinity, ease: 'linear' } }}
-      />
-    </div>
+    <motion.div
+      style={{
+        position: 'absolute',
+        top: -h, bottom: -h, left: -w, right: -w,
+        backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
+        backgroundSize: `24px 24px, 6px 6px, ${w}px ${h}px`,
+        // Static filter — rasterised once, then the layer only *moves*
+        // (transform-only animation = GPU compositing, no repaints).
+        filter: `blur(${blur}px) saturate(1.25)`,
+        opacity,
+        willChange: 'transform',
+      }}
+      animate={prefersReduced ? {} : { x: reverse ? [-w, 0] : [0, -w] }}
+      transition={{ x: { duration, repeat: Infinity, ease: 'linear' } }}
+    />
   )
 }
 
@@ -229,9 +236,10 @@ const STARS = Array.from({ length: 26 }, (_, i) => ({
 
 function Stars() {
   const prefersReduced = useReducedMotion()
+  const list = IS_LITE ? STARS.slice(0, 12) : STARS
   return (
     <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-      {STARS.map((s) => (
+      {list.map((s) => (
         <motion.div
           key={s.id}
           style={{
@@ -374,12 +382,12 @@ function IkatBackground() {
     >
       <Stars />
 
-      {/* Two fabric layers drifting in opposite directions = woven depth.
-          On phones the gyroscope adds a silk-sway as the device tilts. */}
+      {/* Two fabric layers drifting in opposite directions = woven depth
+          (one layer in lite mode). On phones the gyroscope adds a silk-sway. */}
       <motion.div style={{ position: 'absolute', inset: 0, y: prefersReduced ? 0 : yShift, x: prefersReduced ? 0 : xShift }}>
         <motion.div style={{ position: 'absolute', inset: 0, x: coarse ? tiltX : 0, y: coarse ? tiltY : 0 }}>
-          <DriftingPattern duration={46} blur={3} opacity={0.12} scale={1} />
-          <DriftingPattern duration={64} blur={1.2} opacity={0.11} scale={1.45} reverse />
+          <DriftingPattern duration={46} blur={2.5} opacity={0.13} />
+          {!IS_LITE && <DriftingPattern duration={64} blur={1} opacity={0.1} sizeScale={1.45} reverse />}
         </motion.div>
       </motion.div>
 
@@ -394,7 +402,7 @@ function IkatBackground() {
             'repeating-linear-gradient(0deg, rgba(180,240,255,0.022) 0px, rgba(180,240,255,0.022) 1px, transparent 1px, transparent 3px)',
         }}
       />
-      {!prefersReduced && (
+      {!prefersReduced && !IS_LITE && (
         <motion.div
           style={{
             position: 'absolute', left: 0, right: 0, top: 0, height: 160,
@@ -476,10 +484,10 @@ function kunguraPath(x0, x1, yBase, h = 11, tooth = 16) {
 // faintly visible (ghost stroke) and the light draws over it. Glow is faked
 // with a wide translucent under-stroke — no drop-shadow filters, which were
 // the main FPS killer.
-function TracePath({ d, stroke, width = 2, seg = 0.14, duration = 4, delay = 0, reverse = false }) {
+function TracePath({ d, stroke, width = 2, seg = 0.14, duration = 4, delay = 0, reverse = false, still = false }) {
   const prefersReduced = useReducedMotion()
-  if (prefersReduced) {
-    return <path d={d} stroke={stroke} strokeWidth={width} opacity={0.18} fill="none" />
+  if (prefersReduced || still) {
+    return <path d={d} stroke={stroke} strokeWidth={width} opacity={0.2} fill="none" strokeLinejoin="round" />
   }
   const shared = {
     d,
@@ -598,29 +606,29 @@ function Skyline() {
             the actual ornament vocabulary of Registan madrasahs. */}
         <g fill="none" strokeLinecap="round">
           {/* kungura crenellation crowning the portal */}
-          <TracePath d={kunguraPath(320, 640, 118)} stroke="#22D3EE" width={1.8} seg={0.18} duration={5.5} />
+          <TracePath d={kunguraPath(320, 640, 118)} stroke="#22D3EE" width={1.8} seg={0.18} duration={5.5} still={IS_LITE} />
           {/* portal frame loop */}
           <TracePath d="M320 120 H640 V340 H320 Z" stroke="#22D3EE" width={2.2} seg={0.16} duration={5} delay={0.4} />
           {/* pointed arch sweep */}
           <TracePath d="M400 340 V232 Q400 166 480 148 Q560 166 560 232 V340" stroke="#F59E0B" width={2.2} seg={0.2} duration={3.6} delay={0.6} />
           {/* star frieze across the portal band */}
-          <TracePath d={starBandPath([366, 423, 480, 537, 594], 134, 10, 4.5)} stroke="#FACC15" width={1.4} seg={0.1} duration={7} />
+          <TracePath d={starBandPath([366, 423, 480, 537, 594], 134, 10, 4.5)} stroke="#FACC15" width={1.4} seg={0.1} duration={7} still={IS_LITE} />
           {/* khatam star chains on both pylons */}
           <TracePath d={starChainPath(360, [200, 290], 19, 8)} stroke="#DB2777" width={1.6} seg={0.12} duration={6} delay={0.8} />
-          <TracePath d={starChainPath(600, [200, 290], 19, 8)} stroke="#8B5CF6" width={1.6} seg={0.12} duration={6} delay={2.2} reverse />
+          <TracePath d={starChainPath(600, [200, 290], 19, 8)} stroke="#8B5CF6" width={1.6} seg={0.12} duration={6} delay={2.2} reverse still={IS_LITE} />
           {/* dome ribs light up one after another */}
-          <TracePath d="M850 108 Q800 180 790 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} />
-          <TracePath d="M850 108 Q850 180 850 250" stroke="#FACC15" width={1.8} seg={0.3} duration={2.8} delay={0.5} />
-          <TracePath d="M850 108 Q900 180 910 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} delay={1} />
+          <TracePath d="M850 108 Q800 180 790 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} still={IS_LITE} />
+          <TracePath d="M850 108 Q850 180 850 250" stroke="#FACC15" width={1.8} seg={0.3} duration={2.8} delay={0.5} still={IS_LITE} />
+          <TracePath d="M850 108 Q900 180 910 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} delay={1} still={IS_LITE} />
           {/* star medallion on the dome drum */}
           <TracePath d={star8Path(850, 295, 26)} stroke="#F59E0B" width={1.6} seg={0.22} duration={4} delay={1.2} />
           {/* light climbing the minarets */}
-          <TracePath d="M150 340 L158 100" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} reverse />
-          <TracePath d="M1418 340 L1410 120" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} delay={1.7} reverse />
+          <TracePath d="M150 340 L158 100" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} reverse still={IS_LITE} />
+          <TracePath d="M1418 340 L1410 120" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} delay={1.7} reverse still={IS_LITE} />
           {/* bazaar arcade: domes + a small star under each */}
-          <TracePath d={`M1040 290 Q1040 260 1072 250 Q1104 260 1104 290 ${star8Path(1072, 315, 11)}`} stroke="#FACC15" width={1.5} seg={0.25} duration={3.4} />
-          <TracePath d={`M1124 290 Q1124 260 1156 250 Q1188 260 1188 290 ${star8Path(1156, 315, 11)}`} stroke="#DB2777" width={1.5} seg={0.25} duration={3.4} delay={0.7} />
-          <TracePath d={`M1208 290 Q1208 260 1240 250 Q1272 260 1272 290 ${star8Path(1240, 315, 11)}`} stroke="#22D3EE" width={1.5} seg={0.25} duration={3.4} delay={1.4} />
+          <TracePath d={`M1040 290 Q1040 260 1072 250 Q1104 260 1104 290 ${star8Path(1072, 315, 11)}`} stroke="#FACC15" width={1.5} seg={0.25} duration={3.4} still={IS_LITE} />
+          <TracePath d={`M1124 290 Q1124 260 1156 250 Q1188 260 1188 290 ${star8Path(1156, 315, 11)}`} stroke="#DB2777" width={1.5} seg={0.25} duration={3.4} delay={0.7} still={IS_LITE} />
+          <TracePath d={`M1208 290 Q1208 260 1240 250 Q1272 260 1272 290 ${star8Path(1240, 315, 11)}`} stroke="#22D3EE" width={1.5} seg={0.25} duration={3.4} delay={1.4} still={IS_LITE} />
         </g>
       </motion.svg>
     </div>
@@ -902,8 +910,8 @@ function RiceRain() {
   const prefersReduced = useReducedMotion()
   const coarse = useCoarsePointer()
   if (prefersReduced) return null
-  // Phones get a lighter shower — fewer animated layers, steadier FPS.
-  const list = coarse ? PARTICLES.slice(0, 14) : PARTICLES
+  // Phones and weak machines get a lighter shower — steadier FPS.
+  const list = (coarse || IS_LITE) ? PARTICLES.slice(0, 12) : PARTICLES
 
   return (
     <div
@@ -2146,6 +2154,70 @@ function HeroSection({ onOrder }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  BOOT SPLASH — picks up where the instant HTML splash leaves off, then melts
+// ═══════════════════════════════════════════════════════════════════════════
+
+function BootSplash() {
+  const prefersReduced = useReducedMotion()
+  const [show, setShow] = useState(true)
+
+  useEffect(() => {
+    const t = setTimeout(() => setShow(false), prefersReduced ? 300 : 1500)
+    return () => clearTimeout(t)
+  }, [prefersReduced])
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          aria-hidden="true"
+          exit={{ opacity: 0, scale: prefersReduced ? 1 : 1.06 }}
+          transition={{ duration: prefersReduced ? 0.15 : 0.65, ease: 'easeInOut' }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            background:
+              'radial-gradient(ellipse 90% 70% at 50% 32%, #241438 0%, #160F28 52%, #0C081C 100%)',
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{ position: 'relative', width: 140, height: 120 }}>
+            <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)' }}>
+              <KazanIcon />
+            </div>
+            <HeroSteam />
+          </div>
+          <p style={{
+            marginTop: 26,
+            fontFamily: 'var(--font-heading)',
+            fontSize: '1.6rem', fontWeight: 700,
+            color: 'var(--gold)',
+            letterSpacing: '0.18em', textTransform: 'uppercase',
+          }}>
+            Плов Хаус
+          </p>
+          <div style={{
+            marginTop: 18, width: 130, height: 2, borderRadius: 2,
+            background: 'rgba(253,245,230,0.12)',
+            overflow: 'hidden', position: 'relative',
+          }}>
+            <motion.div
+              style={{
+                position: 'absolute', left: 0, top: 0, bottom: 0, width: 58, borderRadius: 2,
+                background: 'linear-gradient(90deg, #F59E0B, #22D3EE)',
+              }}
+              animate={prefersReduced ? {} : { x: [-60, 132] }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  MAIN APP
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -2173,6 +2245,7 @@ export default function App() {
 
   return (
     <>
+      <BootSplash />
       <IkatBackground />
       <Skyline />
       <RiceRain />
