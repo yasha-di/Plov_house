@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5173)",
+      "PowerShell($p = Join-Path $env:USERPROFILE \".claude.json\"; $j = Get-Content $p -Raw | ConvertFrom-Json; $m = $j.mcpServers.magic; Write-Output \"=== magic server config ===\"; $m | ConvertTo-Json -Depth 6)",
+      "mcp__magic__21st_magic_component_builder",
+      "Bash(python \".claude/skills/ui-ux-pro-max/scripts/search.py\" \"uzbek ikat fabric vibrant festive food landing\" --design-system -p \"Plov Adras\" -f markdown)",
+      "Bash(python \".claude/skills/ui-ux-pro-max/scripts/search.py\" \"uzbek ikat festive food landing\" --domain color -n 3)",
+      "Bash(taskkill //F //IM node.exe)",
+      "PowerShell(npm update -g @anthropic-ai/claude)",
+      "PowerShell(python --version)",
+      "PowerShell(py --version)",
+      "PowerShell(py .claude\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py \"uzbek heritage restaurant food cultural futuristic dark\" --design-system -p \"Plov House\" -f markdown)",
+      "PowerShell(npm run lint)",
+      "PowerShell(npm run build)",
+      "PowerShell(gh --version)",
+      "PowerShell(gh auth status)",
+      "PowerShell(git init -b main)",
+      "PowerShell(git add -A)",
+      "PowerShell(git -c user.name=\"Plov House\" -c user.email=\"nurutdinovamal@gmail.com\" commit -m \"Plov House: Uzbek heritage-futurism site with animated ikat patterns\")"
+    ]
+  }
+}

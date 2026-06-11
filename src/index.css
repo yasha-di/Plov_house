@@ -1,0 +1,110 @@
+/* ── Design tokens ──────────────────────────────────────────── */
+:root {
+  /* ── Adras / Atlas (ikat) palette — vibrant, festive ── */
+  --ikat-crimson:   #E11D48;
+  --ikat-orange:    #F97316;
+  --ikat-saffron:   #FACC15;
+  --ikat-emerald:   #10B981;
+  --ikat-turquoise: #06B6D4;
+  --ikat-violet:    #8B5CF6;
+  --ikat-magenta:   #DB2777;
+
+  /* Legacy gold/warm accents (kept for some details) */
+  --saffron:          #F59E0B;
+  --gold:             #D4AF37;
+  --gold-light:       #FBBF24;
+  --gold-pale:        #FDE68A;
+  --terracotta:       #C46B39;
+  --terracotta-dark:  #8B3A21;
+  --pomegranate:      #991B1B;
+  --pom-dark:         #7F1D1D;
+  --cream:            #FDF5E6;
+  --cream-dark:       #F5ECD5;
+  --cream-mid:        #EDD9B0;
+  --brown-dark:       #2D1505;
+  --brown-mid:        #6B3A2A;
+  --brown-light:      #9B6B4A;
+
+  /* ── Futuristic neon (Registan turquoise, holographic) ── */
+  --neon:       #22D3EE;
+  --neon-soft:  rgba(34, 211, 238, 0.35);
+  --neon-faint: rgba(34, 211, 238, 0.14);
+
+  /* ── Dark theme surfaces (night-indigo Samarkand so ikat colors glow) ── */
+  --ink:        #0C081C;   /* deepest base */
+  --ink-2:      #120C22;   /* body bg */
+  --panel:      #1D1230;   /* raised panel */
+  --panel-soft: rgba(32, 20, 48, 0.55);  /* glass card */
+  --panel-line: rgba(244, 204, 21, 0.18); /* hairline */
+  --text:       #F6E9D8;   /* primary text on dark */
+  --text-soft:  rgba(246, 233, 216, 0.68);
+  --text-faint: rgba(246, 233, 216, 0.40);
+
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+
+  --z-bg:        0;
+  --z-skyline:   1;
+  --z-particles: 2;
+  --z-content:   10;
+  --z-progress:  40;
+  --z-modal:     50;
+}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--ink-2);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Root override (remove default Vite styles) ─────────────── */
+#root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border: none;
+  min-height: 100svh;
+  text-align: left;
+  display: block;
+}
+
+/* ── Focus rings ────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--saffron);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Form elements ──────────────────────────────────────────── */
+input, select, button, textarea {
+  font-family: var(--font-body);
+}
+
+/* ── Reduced-motion: cut all transitions/animations ────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1     !important;
+    transition-duration:      0.01ms !important;
+    transition-delay:         0ms    !important;
+  }
+}
