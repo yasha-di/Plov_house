@@ -207,7 +207,10 @@ function DriftingPattern({ reverse = false, duration = 40, sizeScale = 1, blur =
     <motion.div
       style={{
         position: 'absolute',
-        top: -h, bottom: -h, left: -w, right: -w,
+        // Horizontal margins must fit the one-tile x-loop; vertically the
+        // layer only ever moves ~6vh (scroll) + 20px (gyro), so 140px is
+        // plenty — slashes GPU layer memory vs full-tile margins.
+        top: -140, bottom: -140, left: -w, right: -w,
         backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
         backgroundSize: `24px 24px, 6px 6px, ${w}px ${h}px`,
         // Static filter — rasterised once, then the layer only *moves*
@@ -315,8 +318,10 @@ function TorchReveal() {
       <div
         ref={innerRef}
         style={{
-          position: 'absolute', left: 0, top: 0,
-          width: '100vw', height: '100vh',
+          // 260px overscan on every side so the torch circle stays filled
+          // right up to the screen edges (incl. mobile URL-bar resizes).
+          position: 'absolute', left: -260, top: -260,
+          width: 'calc(100vw + 520px)', height: 'calc(100vh + 520px)',
           backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
           backgroundSize: `24px 24px, 6px 6px, ${TILE_W}px ${TILE_H}px`,
           filter: 'saturate(1.55)',
@@ -563,14 +568,21 @@ function Skyline() {
         </g>
       </motion.svg>
 
-      {/* Near silhouette — iwan portal, minarets, ribbed dome, neon edges */}
+      {/* Static neon haze along the horizon (replaces the per-frame
+          drop-shadow filter that was re-rasterising the whole skyline) */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 0, height: '34%',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(34,211,238,0.05) 55%, rgba(34,211,238,0.09) 100%)',
+      }} />
+
+      {/* Near silhouette — iwan portal, minarets, ribbed dome, neon edges.
+          Static content + transform-only parallax = rasterised once. */}
       <motion.svg
         viewBox="0 0 1600 380"
         preserveAspectRatio="xMidYMax slice"
         style={{
           position: 'absolute', bottom: -10, left: 0,
           width: '100%', height: '100%',
-          filter: 'drop-shadow(0 -2px 16px rgba(34,211,238,0.16))',
           y: prefersReduced ? 0 : yNear,
         }}
       >
@@ -599,7 +611,19 @@ function Skyline() {
           <polygon points="1380,340 1388,120 1410,120 1418,340" />
           <path d="M1384 120 Q1399 84 1414 120 Z" />
         </g>
+      </motion.svg>
 
+      {/* Ornament overlay — its dash animations repaint ONLY this mostly
+          transparent svg, never the building silhouettes behind it. */}
+      <motion.svg
+        viewBox="0 0 1600 380"
+        preserveAspectRatio="xMidYMax slice"
+        style={{
+          position: 'absolute', bottom: -10, left: 0,
+          width: '100%', height: '100%',
+          y: prefersReduced ? 0 : yNear,
+        }}
+      >
         {/* ── Racing light over authentic girih ornaments ──
             Khatam stars (two interlaced squares), star-and-diamond chains on
             the pylons, a star frieze across the band, kungura crenellation —
@@ -1024,8 +1048,9 @@ const KAZAN_GRAINS = Array.from({ length: 26 }, (_, i) => ({
   light: Math.random() > 0.5,
 }))
 
-function KazanIcon() {
+function KazanIcon({ live = true }) {
   const prefersReduced = useReducedMotion()
+  const embersOn = live && !prefersReduced
   return (
     <svg viewBox="0 0 140 108" width="140" height="108"
       fill="none" aria-hidden="true"
@@ -1064,7 +1089,7 @@ function KazanIcon() {
         <motion.circle
           key={i} cx={cx} cy={98 - (i % 2) * 2} r={i % 2 ? 2.6 : 3.4}
           fill={i % 2 ? '#FF8C42' : '#E45A1B'}
-          animate={prefersReduced ? {} : { opacity: [0.35, 1, 0.35] }}
+          animate={embersOn ? { opacity: [0.35, 1, 0.35] } : {}}
           transition={{ duration: 1.4 + i * 0.33, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
@@ -1210,6 +1235,8 @@ function HoloTile({ size = 46, color = '#22D3EE', inner = '#F59E0B', float = 18,
 function IkatDivider() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+  // Shimmer runs only while the ribbon is actually on screen.
+  const live = useInView(ref)
   const prefersReduced = useReducedMotion()
   return (
     <div ref={ref} aria-hidden="true" style={{ overflow: 'hidden', position: 'relative', zIndex: 'var(--z-content)' }}>
@@ -1229,7 +1256,7 @@ function IkatDivider() {
             transformOrigin: 'left center',
             opacity: 0.85,
           }}
-          animate={prefersReduced ? {} : { x: [0, -56] }}
+          animate={prefersReduced || !live ? {} : { x: [0, -56] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: 'linear' }}
         />
       </motion.div>
@@ -1954,6 +1981,9 @@ function HeroSection({ onOrder }) {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
   const contentScale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
   const contentY = useTransform(scrollYProgress, [0, 1], [0, -80])
+  // Pause every infinite hero animation once the hero is scrolled away —
+  // steam, holo tiles, arch dashes and embers stop burning frames.
+  const heroVisible = useInView(heroRef)
 
   return (
     <section
@@ -1975,11 +2005,15 @@ function HeroSection({ onOrder }) {
         background: 'radial-gradient(ellipse 65% 55% at 50% 60%, rgba(245,158,11,0.1) 0%, transparent 70%)',
       }} />
 
-      {/* Floating holographic bodom tiles */}
-      <HoloTile style={{ left: '7%',  top: '16%' }} size={44} color="#22D3EE" inner="#F59E0B" duration={6}   />
-      <HoloTile style={{ right: '9%', top: '22%' }} size={34} color="#E11D48" inner="#FACC15" duration={7.2} delay={1.1} />
-      <HoloTile style={{ left: '13%', bottom: '18%' }} size={30} color="#8B5CF6" inner="#22D3EE" duration={5.4} delay={0.6} />
-      <HoloTile style={{ right: '14%', bottom: '24%' }} size={48} color="#F59E0B" inner="#E11D48" duration={8}   delay={1.8} />
+      {/* Floating holographic bodom tiles (only animate while hero is visible) */}
+      {heroVisible && (
+        <>
+          <HoloTile style={{ left: '7%',  top: '16%' }} size={44} color="#22D3EE" inner="#F59E0B" duration={6}   />
+          <HoloTile style={{ right: '9%', top: '22%' }} size={34} color="#E11D48" inner="#FACC15" duration={7.2} delay={1.1} />
+          <HoloTile style={{ left: '13%', bottom: '18%' }} size={30} color="#8B5CF6" inner="#22D3EE" duration={5.4} delay={0.6} />
+          <HoloTile style={{ right: '14%', bottom: '24%' }} size={48} color="#F59E0B" inner="#E11D48" duration={8}   delay={1.8} />
+        </>
+      )}
 
       <motion.div style={{
         textAlign: 'center',
@@ -1995,16 +2029,16 @@ function HeroSection({ onOrder }) {
           position: 'relative', width: 150, height: 130,
           margin: '0 auto 2rem',
         }}>
-          <NeonArch />
+          {heroVisible && <NeonArch />}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: prefersReduced ? 0 : 0.9, ease: [0.34, 1.56, 0.64, 1] }}
             style={{ position: 'relative', top: 24 }}
           >
-            <KazanIcon />
+            <KazanIcon live={heroVisible} />
           </motion.div>
-          <HeroSteam />
+          {heroVisible && <HeroSteam />}
         </div>
 
         <motion.p
@@ -2084,7 +2118,7 @@ function HeroSection({ onOrder }) {
           transition={{ duration: prefersReduced ? 0 : 0.5, delay: 0.85 }}
           style={{ position: 'relative', display: 'inline-block' }}
         >
-          {!prefersReduced && (
+          {!prefersReduced && heroVisible && (
             <motion.div
               aria-hidden="true"
               animate={{ opacity: [0.45, 0.85, 0.45], scale: [0.95, 1.08, 0.95] }}
