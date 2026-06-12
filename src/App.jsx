@@ -1734,13 +1734,16 @@ function PlovCard({ plov, index, onOrder, lang }) {
       onPointerLeave={onLeave}
       style={{
         position: 'relative',
-        background: 'rgba(32, 20, 48, 0.82)',
-        border: `1px solid ${active ? 'rgba(34,211,238,0.45)' : 'var(--panel-line)'}`,
+        // Fully painted ikat ceramic, like the era cards — each plov gets
+        // its own colourway from the shared palette.
+        backgroundColor: PLOV_TILES[plov.id].field,
+        backgroundImage: PLOV_TILES[plov.id].uri,
+        backgroundSize: '240px 300px',
         borderRadius: 18,
-        padding: '1.75rem 1.6rem 1.5rem',
+        padding: 11,
         boxShadow: active
-          ? '0 22px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(34,211,238,0.2), 0 0 34px rgba(34,211,238,0.16)'
-          : '0 6px 26px rgba(0,0,0,0.32)',
+          ? '0 22px 60px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(246,239,226,0.5), 0 0 34px rgba(34,211,238,0.22)'
+          : '0 6px 26px rgba(0,0,0,0.38), inset 0 0 0 2px rgba(246,239,226,0.28)',
         overflow: 'visible',
         display: 'flex',
         flexDirection: 'column',
@@ -1749,13 +1752,26 @@ function PlovCard({ plov, index, onOrder, lang }) {
         transformPerspective: 900,
       }}
     >
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0,
-        height: 4, background: plov.accent,
-        borderRadius: '18px 18px 0 0',
+      <CardSteam visible={active} />
+
+      {/* lacquer gloss over the painting */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, borderRadius: 18, pointerEvents: 'none',
+        background:
+          'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 24%, transparent 44%, rgba(20,9,26,0.16) 100%)',
       }} />
 
-      <CardSteam visible={active} />
+      {/* carved ink medallion holding the text */}
+      <div style={{
+        position: 'relative',
+        flexGrow: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 12,
+        background: 'rgba(16,8,24,0.87)',
+        boxShadow: 'inset 0 0 0 1.5px rgba(246,239,226,0.3), 0 4px 18px rgba(0,0,0,0.4)',
+        padding: '1.35rem 1.25rem 1.25rem',
+      }}>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
         <span style={{
@@ -1814,6 +1830,7 @@ function PlovCard({ plov, index, onOrder, lang }) {
       >
         {STRINGS[lang].orderThis}
       </button>
+      </div>
     </motion.article>
   )
 }
@@ -1824,9 +1841,20 @@ function PlovCard({ plov, index, onOrder, lang }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Hand-painted ikat ceramic tile — modelled on the lacquered pomegranate jar:
-// crimson field, white→jade flame chevrons with black cores and a gold vein,
-// peacock-eye bodom medallions between the flames. Seamless both ways.
-const CARD_TILE_SVG = (() => {
+// a coloured field, white→coloured flame chevrons with black cores and a gold
+// vein, peacock-eye bodom medallions between the flames. Seamless both ways.
+// Parameterised so every card family gets its own colourway from the same
+// site palette.
+function makeIkatTileUri({
+  field,
+  mid,
+  eyeMid,
+  outer = '#F6EFE2',
+  core = '#14091A',
+  vein = '#E8B53A',
+  eyeOuter = '#E8B53A',
+  eyeCore = '#14091A',
+}) {
   const W = 240, H = 300, STEP = 30, AMP = 16
   const tri = (k) => (k % 2 ? 1 : -1)
   const ribbon = (cx, half) => {
@@ -1845,22 +1873,34 @@ const CARD_TILE_SVG = (() => {
     return pts.join(' ')
   }
   const eye = (cx, cy) =>
-    `<path d='M${cx} ${cy - 26} L${cx + 18} ${cy} L${cx} ${cy + 26} L${cx - 18} ${cy} Z' fill='#E8B53A' stroke='#14091A' stroke-width='1.4' stroke-dasharray='3 3'/>` +
-    `<path d='M${cx} ${cy - 16} L${cx + 11} ${cy} L${cx} ${cy + 16} L${cx - 11} ${cy} Z' fill='#1B7F8C'/>` +
-    `<path d='M${cx} ${cy - 8} L${cx + 5.5} ${cy} L${cx} ${cy + 8} L${cx - 5.5} ${cy} Z' fill='#14091A'/>` +
-    `<circle cx='${cx}' cy='${cy - 2}' r='1.6' fill='#F6EFE2'/>`
+    `<path d='M${cx} ${cy - 26} L${cx + 18} ${cy} L${cx} ${cy + 26} L${cx - 18} ${cy} Z' fill='${eyeOuter}' stroke='${core}' stroke-width='1.4' stroke-dasharray='3 3'/>` +
+    `<path d='M${cx} ${cy - 16} L${cx + 11} ${cy} L${cx} ${cy + 16} L${cx - 11} ${cy} Z' fill='${eyeMid}'/>` +
+    `<path d='M${cx} ${cy - 8} L${cx + 5.5} ${cy} L${cx} ${cy + 8} L${cx - 5.5} ${cy} Z' fill='${eyeCore}'/>` +
+    `<circle cx='${cx}' cy='${cy - 2}' r='1.6' fill='${outer}'/>`
   let svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>`
-  svg += `<rect width='${W}' height='${H}' fill='#C8102E'/>`
+  svg += `<rect width='${W}' height='${H}' fill='${field}'/>`
   for (const cx of [0, 120, 240]) {
-    svg += `<path d='${ribbon(cx, 19)}' fill='#F6EFE2'/>`
-    svg += `<path d='${ribbon(cx, 11)}' fill='#2E8B57'/>`
-    svg += `<path d='${ribbon(cx, 5)}' fill='#14091A'/>`
-    svg += `<polyline points='${centerline(cx)}' fill='none' stroke='#E8B53A' stroke-width='2.2'/>`
+    svg += `<path d='${ribbon(cx, 19)}' fill='${outer}'/>`
+    svg += `<path d='${ribbon(cx, 11)}' fill='${mid}'/>`
+    svg += `<path d='${ribbon(cx, 5)}' fill='${core}'/>`
+    svg += `<polyline points='${centerline(cx)}' fill='none' stroke='${vein}' stroke-width='2.2'/>`
   }
   svg += eye(60, 75) + eye(60, 225) + eye(180, 150) + eye(180, 0) + eye(180, 300)
-  return svg + '</svg>'
-})()
-const CARD_TILE = `url("data:image/svg+xml,${encodeURIComponent(CARD_TILE_SVG)}")`
+  svg += '</svg>'
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+}
+
+// Era cards: the original pomegranate-jar colourway.
+const CARD_TILE = makeIkatTileUri({ field: '#C8102E', mid: '#2E8B57', eyeMid: '#1B7F8C' })
+
+// Menu cards: one colourway per plov, all drawn from the same site palette
+// so nothing drifts — pomegranate, terracotta, mustard gold, jade.
+const PLOV_TILES = {
+  festive:     { field: '#9A0F2B', uri: makeIkatTileUri({ field: '#9A0F2B', mid: '#D4AF37', eyeMid: '#1B7F8C' }) },
+  tashkent:    { field: '#B5491F', uri: makeIkatTileUri({ field: '#B5491F', mid: '#1B7F8C', eyeMid: '#2E8B57' }) },
+  chaikhansky: { field: '#A8780A', uri: makeIkatTileUri({ field: '#A8780A', mid: '#C8102E', eyeMid: '#1B7F8C' }) },
+  shavlya:     { field: '#1E6E52', uri: makeIkatTileUri({ field: '#1E6E52', mid: '#C8102E', eyeMid: '#9A0F2B' }) },
+}
 
 // Flame-feather trio — the organic ikat motif from the style brief.
 function FeatherTrio({ accent, size = 44, opacity = 1 }) {
