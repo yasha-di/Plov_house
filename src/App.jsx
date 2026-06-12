@@ -111,9 +111,11 @@ const IKAT_WARP =
 //  TOUCH / MOBILE HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Lite mode for weak machines: ≤4 GB RAM reported by the browser.
-// Cuts layer count, particle count and animated ornament traces.
-const IS_LITE = typeof navigator !== 'undefined' && (navigator.deviceMemory ?? 8) <= 4
+// Lite mode for weak machines: ≤4 GB RAM or ≤4 CPU cores. Safari never
+// reports deviceMemory, so the core count is the fallback that catches
+// older MacBooks. Cuts layer count, particles and animated ornament traces.
+const IS_LITE = typeof navigator !== 'undefined' &&
+  ((navigator.deviceMemory ?? 8) <= 4 || (navigator.hardwareConcurrency ?? 8) <= 4)
 
 // True on phones & tablets (no hover, coarse pointer). Reactive to changes.
 const COARSE_QUERY = '(hover: none), (pointer: coarse)'
@@ -1325,9 +1327,51 @@ function KazanIcon({ live = true }) {
 // zero WebGL — the lag-free answer to a 3D hero character.
 function ChefOshpaz({ live = true }) {
   const prefersReduced = useReducedMotion()
+  const coarse = useCoarsePointer()
   const animOn = live && !prefersReduced
+  const boxRef = useRef(null)
+
+  // Head follows the cursor: spring-smoothed rotation around the neck plus a
+  // tiny eye shift. Motion values only — zero React re-renders per move.
+  const rotRaw = useMotionValue(0)
+  const headRot = useSpring(rotRaw, { stiffness: 130, damping: 14 })
+  const eyeRawX = useMotionValue(0)
+  const eyeRawY = useMotionValue(0)
+  const eyeX = useSpring(eyeRawX, { stiffness: 180, damping: 18 })
+  const eyeY = useSpring(eyeRawY, { stiffness: 180, damping: 18 })
+
+  useEffect(() => {
+    if (!live || prefersReduced || coarse) {
+      rotRaw.set(0); eyeRawX.set(0); eyeRawY.set(0)
+      return
+    }
+    let raf = 0
+    const onMove = (e) => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        const el = boxRef.current
+        if (!el) return
+        const r = el.getBoundingClientRect()
+        const hx = r.left + r.width * 0.46   // head centre in the 100×140 box
+        const hy = r.top + r.height * 0.21
+        const dx = e.clientX - hx
+        const dy = e.clientY - hy
+        rotRaw.set(Math.max(-10, Math.min(12, dx * 0.02)))
+        eyeRawX.set(Math.max(-1.4, Math.min(1.4, dx * 0.004)))
+        eyeRawY.set(Math.max(-1, Math.min(1.6, dy * 0.004)))
+      })
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [live, prefersReduced, coarse, rotRaw, eyeRawX, eyeRawY])
+
   return (
     <motion.div
+      ref={boxRef}
       aria-hidden="true"
       style={{ position: 'absolute', left: 6, bottom: 2, width: 100, height: 140 }}
       animate={animOn ? { y: [0, -2.5, 0] } : {}}
@@ -1358,21 +1402,26 @@ function ChefOshpaz({ live = true }) {
         {/* far arm resting */}
         <path d="M30 54 Q21 68 25 82" stroke="#9C3A22" strokeWidth="8" strokeLinecap="round" />
         <circle cx="25" cy="84" r="3.6" fill="#E9BD8C" />
-        {/* neck + head */}
+        {/* neck */}
         <rect x="42" y="40" width="8" height="6" rx="2" fill="#DBA877" />
-        <ellipse cx="46" cy="29" rx="11.5" ry="11" fill="#E9BD8C" />
-        <circle cx="35.5" cy="30" r="2.2" fill="#DBA877" />
-        {/* doppi skullcap with white motifs */}
-        <path d="M33 19 Q46 6 59 19 L56.5 25 L35.5 25 Z" fill="#14142B" />
-        <path d="M35.5 22 L56.5 22" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" strokeDasharray="2 2" />
-        <circle cx="40" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
-        <circle cx="46" cy="19.5" r="0.8" fill="rgba(255,255,255,0.9)" />
-        <circle cx="52" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
-        {/* face: brow, eye, nose, moustache */}
-        <path d="M49 25 Q52.5 23.8 55 25.4" stroke="#5A3214" strokeWidth="1" />
-        <circle cx="52.5" cy="28" r="1.3" fill="#2A1505" />
-        <path d="M55.5 30 Q57 31.5 55.5 32.6" stroke="#C99B66" strokeWidth="1" />
-        <path d="M48.5 33.8 Q52 35.4 55.5 33.6" stroke="#3A2418" strokeWidth="1.6" strokeLinecap="round" />
+        {/* head group — rotates around the neck towards the cursor */}
+        <motion.g style={{ rotate: headRot, transformOrigin: '46px 41px', transformBox: 'view-box' }}>
+          <ellipse cx="46" cy="29" rx="11.5" ry="11" fill="#E9BD8C" />
+          <circle cx="35.5" cy="30" r="2.2" fill="#DBA877" />
+          {/* doppi skullcap with white motifs */}
+          <path d="M33 19 Q46 6 59 19 L56.5 25 L35.5 25 Z" fill="#14142B" />
+          <path d="M35.5 22 L56.5 22" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" strokeDasharray="2 2" />
+          <circle cx="40" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
+          <circle cx="46" cy="19.5" r="0.8" fill="rgba(255,255,255,0.9)" />
+          <circle cx="52" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
+          {/* face: brow, eye (cursor-tracking), nose, moustache */}
+          <path d="M49 25 Q52.5 23.8 55 25.4" stroke="#5A3214" strokeWidth="1" />
+          <motion.g style={{ x: eyeX, y: eyeY }}>
+            <circle cx="52.5" cy="28" r="1.3" fill="#2A1505" />
+          </motion.g>
+          <path d="M55.5 30 Q57 31.5 55.5 32.6" stroke="#C99B66" strokeWidth="1" />
+          <path d="M48.5 33.8 Q52 35.4 55.5 33.6" stroke="#3A2418" strokeWidth="1.6" strokeLinecap="round" />
+        </motion.g>
         {/* stirring arm + kapgir ladle reaching into the kazan */}
         <motion.g
           style={{ transformOrigin: '64px 50px', transformBox: 'view-box' }}
@@ -2776,6 +2825,10 @@ export default function App() {
           background: 'transparent',
           padding: 'clamp(3rem, 8vw, 6rem) clamp(1rem, 5vw, 3rem)',
           zIndex: 'var(--z-content)',
+          // Browser skips layout & paint entirely while the section is
+          // offscreen — big scroll-smoothness win, zero visual change.
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 900px',
         }}
       >
         <SectionTitle sub={t.menuSub}>
@@ -2811,6 +2864,8 @@ export default function App() {
           padding: 'clamp(3rem, 8vw, 6rem) clamp(1rem, 5vw, 3rem)',
           position: 'relative',
           zIndex: 'var(--z-content)',
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 800px',
         }}
       >
         <SectionTitle sub={t.servicesSub}>
@@ -2917,6 +2972,8 @@ export default function App() {
           position: 'relative',
           zIndex: 'var(--z-content)',
           overflow: 'hidden',
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 700px',
         }}
       >
         {/* Slowly rotating ikat medallion behind the quote */}
@@ -3014,6 +3071,8 @@ export default function App() {
           padding: 'clamp(2.5rem, 7vw, 4.5rem) clamp(1rem, 5vw, 3rem)',
           position: 'relative',
           zIndex: 'var(--z-content)',
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 600px',
         }}
       >
         <div style={{
