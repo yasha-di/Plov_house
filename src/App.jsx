@@ -1709,12 +1709,53 @@ function EraPanel({ era, lang, fill = true }) {
   )
 }
 
-// One era slide: rises in from below, holds, then evaporates upward while the
-// next one materialises behind it. Transform/opacity only — fully composited.
+// Rice-burst configs: one stable random set per era, generated at module load.
+// Each grain starts somewhere on the card and flies outward on a gravity arc.
+const GRAIN_SETS = ERAS.map(() =>
+  Array.from({ length: 22 }, (_, i) => {
+    const dir = Math.random() * Math.PI * 2
+    const dist = 120 + Math.random() * 280
+    return {
+      id: i,
+      sx: (Math.random() - 0.5) * 300,            // start offset from card centre
+      sy: (Math.random() - 0.5) * 180,
+      dx: Math.cos(dir) * dist,                   // horizontal scatter
+      midY: -50 - Math.random() * 90,             // rise of the arc
+      endY: 180 + Math.random() * 260,            // fall below
+      spin: (Math.random() > 0.5 ? 1 : -1) * (200 + Math.random() * 380),
+      w: 5 + Math.random() * 3,
+      h: 11 + Math.random() * 5,
+      fill: Math.random() > 0.4 ? '#F5DEB3' : '#EED9A0',
+    }
+  }))
+
+// A single rice grain scrubbed by the slide's exit progress: bursts out of the
+// dissolving card, arcs up, tumbles down and fades. Scroll back — it returns.
+function FlyingGrain({ exitP, g }) {
+  const x = useTransform(exitP, [0, 1], [g.sx, g.sx + g.dx])
+  const y = useTransform(exitP, [0, 0.45, 1], [g.sy, g.sy + g.midY, g.sy + g.endY])
+  const rotate = useTransform(exitP, [0, 1], [0, g.spin])
+  const opacity = useTransform(exitP, [0, 0.1, 0.7, 1], [0, 1, 0.9, 0])
+  return (
+    <motion.div style={{
+      position: 'absolute', left: '50%', top: '50%',
+      x, y, rotate, opacity,
+      willChange: 'transform, opacity',
+    }}>
+      <svg width={g.w} height={g.h} viewBox="0 0 6 13">
+        <ellipse cx="3" cy="6.5" rx="2.4" ry="6" fill={g.fill} />
+      </svg>
+    </motion.div>
+  )
+}
+
+// One era slide: rises from the depth, holds, then FLIES FORWARD into the
+// viewer and shatters into rice grains. Transform/opacity only — composited.
 function EraSlide({ era, index, total, progress, lang }) {
+  const prefersReduced = useReducedMotion()
   const start = index / total
   const end = (index + 1) / total
-  const f = 0.30 / total // crossfade width
+  const f = 0.34 / total // transition width
   const isFirst = index === 0
   const isLast = index === total - 1
 
@@ -1726,26 +1767,46 @@ function EraSlide({ era, index, total, progress, lang }) {
   let range, oOut, sOut, yOut
   if (isFirst) {
     range = [end, end + f]
-    oOut = [1, 0]; sOut = [1, 1.05]; yOut = [0, -64]
+    oOut = [1, 0]; sOut = [1, 1.6]; yOut = [0, -10]
   } else if (isLast) {
     range = [start - f, start]
-    oOut = [0, 1]; sOut = [0.94, 1]; yOut = [56, 0]
+    oOut = [0, 1]; sOut = [0.9, 1]; yOut = [26, 0]
   } else {
     range = [start - f, start, end, end + f]
-    oOut = [0, 1, 1, 0]; sOut = [0.94, 1, 1, 1.05]; yOut = [56, 0, 0, -64]
+    oOut = [0, 1, 1, 0]; sOut = [0.9, 1, 1, 1.6]; yOut = [26, 0, 0, -10]
   }
   const opacity = useTransform(progress, range, oOut)
   const scale   = useTransform(progress, range, sOut)
   const y       = useTransform(progress, range, yOut)
 
+  // Exit progress 0→1 drives the rice burst (last slide never dissolves).
+  const exitP = useTransform(
+    progress,
+    isLast ? [0.999, 1] : [end, Math.min(end + f * 0.95, 1)],
+    [0, 1],
+  )
+  const showGrains = !isLast && !prefersReduced && !IS_LITE
+
   return (
-    <motion.div style={{
-      position: 'absolute', inset: 0,
-      opacity, scale, y,
-      willChange: 'transform, opacity',
-    }}>
-      <EraPanel era={era} lang={lang} />
-    </motion.div>
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {/* The card itself — dissolves as it flies toward the viewer */}
+      <motion.div style={{
+        position: 'absolute', inset: 0,
+        opacity, scale, y,
+        willChange: 'transform, opacity',
+      }}>
+        <EraPanel era={era} lang={lang} />
+      </motion.div>
+
+      {/* Rice burst layer — stays visible while the card fades */}
+      {showGrains && (
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0 }}>
+          {GRAIN_SETS[index].map((g) => (
+            <FlyingGrain key={g.id} exitP={exitP} g={g} />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
