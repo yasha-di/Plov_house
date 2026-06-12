@@ -1353,13 +1353,13 @@ function ChefOshpaz({ live = true }) {
         const el = boxRef.current
         if (!el) return
         const r = el.getBoundingClientRect()
-        const hx = r.left + r.width * 0.46   // head centre in the 100×140 box
-        const hy = r.top + r.height * 0.21
+        const hx = r.left + r.width * 0.5    // head centre in the 110×150 box
+        const hy = r.top + r.height * 0.2
         const dx = e.clientX - hx
         const dy = e.clientY - hy
-        rotRaw.set(Math.max(-10, Math.min(12, dx * 0.02)))
-        eyeRawX.set(Math.max(-1.4, Math.min(1.4, dx * 0.004)))
-        eyeRawY.set(Math.max(-1, Math.min(1.6, dy * 0.004)))
+        rotRaw.set(Math.max(-13, Math.min(13, dx * 0.03)))
+        eyeRawX.set(Math.max(-2.4, Math.min(2.4, dx * 0.008)))
+        eyeRawY.set(Math.max(-1.6, Math.min(2.2, dy * 0.008)))
       })
     }
     window.addEventListener('pointermove', onMove, { passive: true })
@@ -1373,66 +1373,125 @@ function ChefOshpaz({ live = true }) {
     <motion.div
       ref={boxRef}
       aria-hidden="true"
-      style={{ position: 'absolute', left: 6, bottom: 2, width: 100, height: 140 }}
+      style={{ position: 'absolute', left: 0, bottom: 2, width: 110, height: 150 }}
       animate={animOn ? { y: [0, -2.5, 0] } : {}}
       transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
     >
-      <svg viewBox="0 0 100 140" width="100" height="140" fill="none"
+      <svg viewBox="0 0 110 150" width="110" height="150" fill="none"
         style={{ overflow: 'visible', display: 'block' }}>
+        <defs>
+          {/* toy-figurine shading: soft radial volumes + lacquer sheen */}
+          <radialGradient id="chef-skin" cx="0.42" cy="0.32" r="0.85">
+            <stop offset="0%" stopColor="#F6CFA2" />
+            <stop offset="62%" stopColor="#EAB988" />
+            <stop offset="100%" stopColor="#D29B66" />
+          </radialGradient>
+          <linearGradient id="chef-robe" x1="0" y1="0" x2="1" y2="0.15">
+            <stop offset="0%" stopColor="#D75A33" />
+            <stop offset="48%" stopColor="#B5452A" />
+            <stop offset="100%" stopColor="#7E2C18" />
+          </linearGradient>
+          <radialGradient id="chef-doppi" cx="0.5" cy="0.2" r="1">
+            <stop offset="0%" stopColor="#2A2A4E" />
+            <stop offset="100%" stopColor="#101024" />
+          </radialGradient>
+          <linearGradient id="chef-sash" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FFDF6B" />
+            <stop offset="100%" stopColor="#E0A92B" />
+          </linearGradient>
+        </defs>
+
         {/* ground shadow */}
-        <ellipse cx="46" cy="135" rx="26" ry="4" fill="rgba(0,0,0,0.28)" />
+        <ellipse cx="55" cy="145" rx="30" ry="4.5" fill="rgba(0,0,0,0.3)" />
         {/* boots */}
-        <ellipse cx="38" cy="130" rx="7" ry="3.5" fill="#1F1208" />
-        <ellipse cx="58" cy="130" rx="7" ry="3.5" fill="#1F1208" />
+        <ellipse cx="45" cy="140" rx="8" ry="4" fill="#241208" />
+        <ellipse cx="65" cy="140" rx="8" ry="4" fill="#241208" />
+        <ellipse cx="44" cy="138.5" rx="6" ry="2.4" fill="#3A2010" />
+        <ellipse cx="64" cy="138.5" rx="6" ry="2.4" fill="#3A2010" />
         {/* trousers */}
-        <rect x="33" y="111" width="10" height="18" rx="3" fill="#3A2418" />
-        <rect x="53" y="111" width="10" height="18" rx="3" fill="#3A2418" />
-        {/* chapan robe */}
-        <path d="M26 48 Q46 39 66 48 L72 114 Q46 122 20 114 Z" fill="#B5452A" />
-        {/* adras stripes */}
-        <path d="M36 45 L33 116 L38 117 L40 44 Z" fill="#D4AF37" opacity="0.55" />
-        <path d="M52 43 L52 119 L57 118 L56 44 Z" fill="#D4AF37" opacity="0.55" />
-        <path d="M63 47 L67 114 L71 113 L67 48 Z" fill="#2A9DB8" opacity="0.5" />
-        {/* collar */}
-        <path d="M40 46 L46 60 L52 46" stroke="#F6E9D8" strokeWidth="2.2" />
-        {/* belbog sash */}
-        <rect x="23" y="80" width="46" height="8" rx="2" fill="#FACC15" />
-        <circle cx="32" cy="84" r="3.2" fill="#E0A92B" />
-        <path d="M30 88 L27 98 L32 97 Z" fill="#E0A92B" />
-        {/* far arm resting */}
-        <path d="M30 54 Q21 68 25 82" stroke="#9C3A22" strokeWidth="8" strokeLinecap="round" />
-        <circle cx="25" cy="84" r="3.6" fill="#E9BD8C" />
+        <rect x="40" y="120" width="11" height="19" rx="4" fill="#3A2418" />
+        <rect x="59" y="120" width="11" height="19" rx="4" fill="#3A2418" />
+
+        {/* chapan robe — front view, rounded figurine volume */}
+        <path d="M30 58 Q55 46 80 58 L87 124 Q55 135 23 124 Z" fill="url(#chef-robe)" />
+        {/* ivory shirt at the chest */}
+        <path d="M46 55 L55 72 L64 55 Q55 50 46 55 Z" fill="#F6EFE2" />
+        <path d="M46 55 L55 72 L64 55" stroke="#D8CDB8" strokeWidth="1" fill="none" />
+        {/* lapels with black piping */}
+        <path d="M46 55 L51 122" stroke="#14091A" strokeWidth="2.2" />
+        <path d="M64 55 L59 122" stroke="#14091A" strokeWidth="2.2" />
+        {/* adras stripes on the sides */}
+        <path d="M36 56 L32 122 L37 123 L40 55 Z" fill="#D4AF37" opacity="0.6" />
+        <path d="M74 56 L78 122 L73 123 L70 55 Z" fill="#2A9DB8" opacity="0.55" />
+        {/* lacquer sheen on the left shoulder */}
+        <path d="M33 58 Q40 51 52 50 Q40 56 36 66 Z" fill="rgba(255,255,255,0.22)" />
+        {/* neon rim light from the right (the future glows) */}
+        <path d="M80 58 L86.5 122" stroke="rgba(34,211,238,0.4)" strokeWidth="1.6" />
+
+        {/* belbog sash with knot */}
+        <rect x="27" y="92" width="56" height="9" rx="3" fill="url(#chef-sash)" />
+        <rect x="27" y="92" width="56" height="3" rx="1.5" fill="rgba(255,255,255,0.3)" />
+        <circle cx="38" cy="96.5" r="3.6" fill="#E0A92B" stroke="#B8860B" strokeWidth="0.8" />
+        <path d="M36 101 L32 112 L38 110 Z" fill="#E0A92B" />
+
+        {/* left arm resting on the hip */}
+        <path d="M32 64 Q18 76 26 92" stroke="#9C3A22" strokeWidth="9" strokeLinecap="round" />
+        <circle cx="27" cy="93" r="4.2" fill="url(#chef-skin)" />
+
         {/* neck */}
-        <rect x="42" y="40" width="8" height="6" rx="2" fill="#DBA877" />
-        {/* head group — rotates around the neck towards the cursor */}
-        <motion.g style={{ rotate: headRot, transformOrigin: '46px 41px', transformBox: 'view-box' }}>
-          <ellipse cx="46" cy="29" rx="11.5" ry="11" fill="#E9BD8C" />
-          <circle cx="35.5" cy="30" r="2.2" fill="#DBA877" />
-          {/* doppi skullcap with white motifs */}
-          <path d="M33 19 Q46 6 59 19 L56.5 25 L35.5 25 Z" fill="#14142B" />
-          <path d="M35.5 22 L56.5 22" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" strokeDasharray="2 2" />
-          <circle cx="40" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
-          <circle cx="46" cy="19.5" r="0.8" fill="rgba(255,255,255,0.9)" />
-          <circle cx="52" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
-          {/* face: brow, eye (cursor-tracking), nose, moustache */}
-          <path d="M49 25 Q52.5 23.8 55 25.4" stroke="#5A3214" strokeWidth="1" />
+        <rect x="50" y="48" width="10" height="7" rx="3" fill="#DBA877" />
+
+        {/* head group — front-facing, rotates towards the cursor */}
+        <motion.g style={{ rotate: headRot, transformOrigin: '55px 50px', transformBox: 'view-box' }}>
+          {/* ears */}
+          <circle cx="40.5" cy="32" r="2.8" fill="#DBA877" />
+          <circle cx="69.5" cy="32" r="2.8" fill="#DBA877" />
+          {/* face */}
+          <ellipse cx="55" cy="31" rx="14" ry="13.5" fill="url(#chef-skin)" />
+          {/* glossy toy highlight on the forehead */}
+          <ellipse cx="48" cy="23" rx="6" ry="3.4" fill="rgba(255,255,255,0.3)" transform="rotate(-18 48 23)" />
+          {/* doppi skullcap */}
+          <path d="M40 20 Q55 4 70 20 L67.5 27.5 L42.5 27.5 Z" fill="url(#chef-doppi)" />
+          <path d="M42.5 24 L67.5 24" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" strokeDasharray="2.2 2.2" />
+          {/* white bodom motifs on the cap */}
+          <path d="M47 19 Q48.4 16.4 49.8 19 Q48.4 21.6 47 19 Z" fill="rgba(255,255,255,0.9)" />
+          <path d="M53.6 17.4 Q55 14.8 56.4 17.4 Q55 20 53.6 17.4 Z" fill="rgba(255,255,255,0.9)" />
+          <path d="M60.2 19 Q61.6 16.4 63 19 Q61.6 21.6 60.2 19 Z" fill="rgba(255,255,255,0.9)" />
+          {/* brows */}
+          <path d="M45 25.5 Q48.5 23.6 52 25.2" stroke="#4A2A10" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M58 25.2 Q61.5 23.6 65 25.5" stroke="#4A2A10" strokeWidth="1.5" strokeLinecap="round" />
+          {/* eyes: ivory sclera + tracking pupils with a glint */}
+          <ellipse cx="48.5" cy="29.5" rx="3.2" ry="3.5" fill="#FDFBF4" />
+          <ellipse cx="61.5" cy="29.5" rx="3.2" ry="3.5" fill="#FDFBF4" />
           <motion.g style={{ x: eyeX, y: eyeY }}>
-            <circle cx="52.5" cy="28" r="1.3" fill="#2A1505" />
+            <circle cx="48.5" cy="29.8" r="1.7" fill="#241408" />
+            <circle cx="61.5" cy="29.8" r="1.7" fill="#241408" />
+            <circle cx="49.1" cy="29.2" r="0.55" fill="#FFFFFF" />
+            <circle cx="62.1" cy="29.2" r="0.55" fill="#FFFFFF" />
           </motion.g>
-          <path d="M55.5 30 Q57 31.5 55.5 32.6" stroke="#C99B66" strokeWidth="1" />
-          <path d="M48.5 33.8 Q52 35.4 55.5 33.6" stroke="#3A2418" strokeWidth="1.6" strokeLinecap="round" />
+          {/* nose */}
+          <path d="M55 31 Q56.6 34.4 55 36.2 Q53.8 35.2 54 33.5" stroke="#C99B66" strokeWidth="1.1" strokeLinecap="round" />
+          {/* rosy toy cheeks */}
+          <circle cx="44" cy="35" r="2.6" fill="rgba(224,118,86,0.35)" />
+          <circle cx="66" cy="35" r="2.6" fill="rgba(224,118,86,0.35)" />
+          {/* moustache + warm smile */}
+          <path d="M47.5 38.6 Q55 42.4 62.5 38.6" stroke="#3A2418" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M50 41.8 Q55 44.4 60 41.8" stroke="#B5752F" strokeWidth="1.2" strokeLinecap="round" />
         </motion.g>
+
         {/* stirring arm + kapgir ladle reaching into the kazan */}
         <motion.g
-          style={{ transformOrigin: '64px 50px', transformBox: 'view-box' }}
+          style={{ transformOrigin: '78px 62px', transformBox: 'view-box' }}
           animate={animOn ? { rotate: [0, 4, 0, -2.5, 0] } : {}}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <path d="M62 52 Q76 46 88 50" stroke="#9C3A22" strokeWidth="8" strokeLinecap="round" />
-          <circle cx="90" cy="51" r="4" fill="#E9BD8C" />
-          <path d="M88 49 L148 60" stroke="#7A4A26" strokeWidth="3.2" strokeLinecap="round" />
-          <ellipse cx="151" cy="62" rx="6.5" ry="4" fill="#9A9AA4" stroke="#6E6E78" strokeWidth="1"
-            transform="rotate(12 151 62)" />
+          <path d="M78 62 Q92 58 100 60" stroke="#9C3A22" strokeWidth="9" strokeLinecap="round" />
+          <circle cx="102" cy="60" r="4.4" fill="url(#chef-skin)" />
+          <path d="M100 58 L152 70" stroke="#7A4A26" strokeWidth="3.4" strokeLinecap="round" />
+          <path d="M100 58 L152 70" stroke="rgba(255,220,160,0.4)" strokeWidth="1" strokeLinecap="round" />
+          <ellipse cx="155" cy="72" rx="7" ry="4.4" fill="#A8A8B2" stroke="#62626E" strokeWidth="1"
+            transform="rotate(12 155 72)" />
+          <ellipse cx="154" cy="71" rx="3.4" ry="1.8" fill="rgba(255,255,255,0.45)" transform="rotate(12 154 71)" />
         </motion.g>
       </svg>
     </motion.div>
@@ -1764,6 +1823,28 @@ function PlovCard({ plov, index, onOrder, lang }) {
 //  (Replaced the long horizontal track — на слабых машинах он казался багом.)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Woven ikat ribbon with black piping between the colours — the band that
+// crowns and grounds every era card (crimson / gold / turquoise / emerald).
+const ERA_BAND =
+  'repeating-linear-gradient(90deg,' +
+  ' #E11D48 0 16px, #14091A 16px 19px, #FACC15 19px 33px, #14091A 33px 36px,' +
+  ' #06B6D4 36px 50px, #14091A 50px 53px, #10B981 53px 67px, #14091A 67px 70px)'
+
+// Flame-feather trio — the organic ikat motif from the style brief.
+function FeatherTrio({ accent, size = 44, opacity = 1 }) {
+  return (
+    <svg width={size} height={size * 0.82} viewBox="0 0 44 36" aria-hidden="true"
+      style={{ overflow: 'visible', opacity }}>
+      <path d="M22 34 Q14 20 22 4 Q30 20 22 34 Z" fill={accent} opacity="0.92" />
+      <path d="M10 34 Q4 24 12 12 Q16 24 10 34 Z" fill="#FACC15" opacity="0.8" />
+      <path d="M34 34 Q40 24 32 12 Q28 24 34 34 Z" fill="#06B6D4" opacity="0.8" />
+      <circle cx="22" cy="26" r="1.6" fill="#F6EFE2" opacity="0.9" />
+      <circle cx="11" cy="28" r="1.1" fill="#F6EFE2" opacity="0.8" />
+      <circle cx="33" cy="28" r="1.1" fill="#F6EFE2" opacity="0.8" />
+    </svg>
+  )
+}
+
 function EraPanel({ era, lang, fill = true }) {
   return (
     <div
@@ -1805,41 +1886,90 @@ function EraPanel({ era, lang, fill = true }) {
 
       <div style={{
         position: 'relative',
-        maxWidth: 540,
+        maxWidth: 560,
+        width: '100%',
         textAlign: 'center',
-        background: 'rgba(16,10,32,0.78)',
-        border: `1px solid ${era.accent}3D`,
-        borderRadius: 22,
-        padding: 'clamp(1.8rem, 4vw, 2.8rem)',
-        boxShadow: `0 18px 60px rgba(0,0,0,0.4), 0 0 40px ${era.accent}14`,
+        overflow: 'hidden',
+        background: 'linear-gradient(165deg, rgba(32,19,54,0.96) 0%, rgba(13,8,26,0.94) 100%)',
+        borderRadius: 26,
+        padding: 'clamp(2.3rem, 4.5vw, 3.1rem) clamp(1.6rem, 4vw, 2.6rem) clamp(2.4rem, 4.5vw, 3.2rem)',
+        boxShadow:
+          `0 24px 70px rgba(0,0,0,0.5), 0 0 50px ${era.accent}1F, ` +
+          `inset 0 0 0 1.5px ${era.accent}4D, inset 0 1px 0 rgba(255,255,255,0.08)`,
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.2rem' }}>
-          <svg width="40" height="64" viewBox="0 0 40 64" aria-hidden="true" style={{ overflow: 'visible' }}>
-            <polygon
-              points={ptsStr(steppedDiamond(20, 32, 17, 29, 5))}
-              fill="none" stroke={era.accent} strokeWidth="1.5"
-              style={{ filter: `drop-shadow(0 0 7px ${era.accent})` }}
-            />
-            <polygon points={ptsStr(steppedDiamond(20, 32, 8, 14, 3))} fill={era.accent} opacity="0.6" />
-          </svg>
+        {/* woven ikat bands crowning and grounding the card */}
+        <div aria-hidden="true" style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 9,
+          backgroundImage: `${IKAT_FEATHER}, ${ERA_BAND}`,
+          backgroundSize: '24px 24px, auto',
+        }} />
+        <div aria-hidden="true" style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 9,
+          backgroundImage: `${IKAT_FEATHER}, ${ERA_BAND}`,
+          backgroundSize: '24px 24px, auto',
+        }} />
+
+        {/* lacquer sheen — glossy hand-painted ceramic feel */}
+        <div aria-hidden="true" style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'linear-gradient(118deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 26%, transparent 44%)',
+        }} />
+
+        {/* feather motifs tucked into the corners */}
+        <div aria-hidden="true" style={{ position: 'absolute', left: 10, top: 16, transform: 'rotate(45deg)' }}>
+          <FeatherTrio accent={era.accent} size={26} opacity={0.55} />
+        </div>
+        <div aria-hidden="true" style={{ position: 'absolute', right: 10, top: 16, transform: 'rotate(-45deg)' }}>
+          <FeatherTrio accent={era.accent} size={26} opacity={0.55} />
+        </div>
+        <div aria-hidden="true" style={{ position: 'absolute', left: 10, bottom: 16, transform: 'rotate(135deg)' }}>
+          <FeatherTrio accent={era.accent} size={26} opacity={0.45} />
+        </div>
+        <div aria-hidden="true" style={{ position: 'absolute', right: 10, bottom: 16, transform: 'rotate(-135deg)' }}>
+          <FeatherTrio accent={era.accent} size={26} opacity={0.45} />
         </div>
 
-        <p style={{
-          fontSize: '0.74rem', fontWeight: 700,
-          textTransform: 'uppercase', letterSpacing: '0.28em',
-          color: era.accent, marginBottom: '0.6rem',
-        }}>
-          {era.year[lang]}
+        {/* crowning flame-feather motif */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.9rem' }}>
+          <FeatherTrio accent={era.accent} size={46} />
+        </div>
+
+        {/* year chip — lacquered gold-to-accent pill */}
+        <p style={{ marginBottom: '0.9rem' }}>
+          <span style={{
+            display: 'inline-block',
+            padding: '4px 16px',
+            borderRadius: 99,
+            fontSize: '0.72rem', fontWeight: 800,
+            textTransform: 'uppercase', letterSpacing: '0.24em',
+            color: '#14091A',
+            background: `linear-gradient(90deg, ${era.accent} 0%, #FACC15 100%)`,
+            boxShadow: '0 2px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.35)',
+          }}>
+            {era.year[lang]}
+          </span>
         </p>
 
         <h3 style={{
           fontFamily: 'var(--font-heading)',
           fontSize: 'clamp(1.6rem, 4vw, 2.3rem)',
-          fontWeight: 700, color: 'var(--cream)',
-          marginBottom: '0.9rem', lineHeight: 1.2,
+          fontWeight: 700, color: '#F6EFE2',
+          lineHeight: 1.2,
         }}>
           {era.title[lang]}
         </h3>
+
+        {/* ornament divider: line — bodom diamond — line */}
+        <div aria-hidden="true" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 10, margin: '0.85rem 0 1rem',
+        }}>
+          <span style={{ height: 1.5, width: 56, background: `linear-gradient(90deg, transparent, ${era.accent})` }} />
+          <svg width="11" height="11" viewBox="0 0 12 12">
+            <path d="M6 0 L12 6 L6 12 L0 6 Z" fill={era.accent} />
+          </svg>
+          <span style={{ height: 1.5, width: 56, background: `linear-gradient(270deg, transparent, ${era.accent})` }} />
+        </div>
 
         <p style={{
           fontSize: '0.96rem', lineHeight: 1.75,
@@ -1852,14 +1982,17 @@ function EraPanel({ era, lang, fill = true }) {
   )
 }
 
-// Rice-burst configs: one stable random set per era, generated at module load.
-// Each grain starts somewhere on the card and flies outward on a gravity arc.
-const GRAIN_SETS = ERAS.map(() =>
-  Array.from({ length: 16 }, (_, i) => {
+// Burst configs: one stable random set per era, generated at module load.
+// 18 rice grains + 6 lacquered ikat shards (the card's own ornament breaking
+// off) fly outward on gravity arcs when the card shatters.
+const SHARD_COLORS = ['#E11D48', '#FACC15', '#06B6D4', '#10B981', '#8B5CF6', '#F6EFE2']
+
+const GRAIN_SETS = ERAS.map(() => {
+  const grains = Array.from({ length: 18 }, (_, i) => {
     const dir = Math.random() * Math.PI * 2
     const dist = 120 + Math.random() * 280
     return {
-      id: i,
+      id: `g${i}`,
       sx: (Math.random() - 0.5) * 300,            // start offset from card centre
       sy: (Math.random() - 0.5) * 180,
       dx: Math.cos(dir) * dist,                   // horizontal scatter
@@ -1870,7 +2003,26 @@ const GRAIN_SETS = ERAS.map(() =>
       h: 11 + Math.random() * 5,
       fill: Math.random() > 0.4 ? '#F5DEB3' : '#EED9A0',
     }
-  }))
+  })
+  const shards = Array.from({ length: 6 }, (_, i) => {
+    const dir = Math.random() * Math.PI * 2
+    const dist = 140 + Math.random() * 240
+    return {
+      id: `s${i}`,
+      shard: true,
+      sx: (Math.random() - 0.5) * 340,
+      sy: (Math.random() - 0.5) * 170,
+      dx: Math.cos(dir) * dist,
+      midY: -60 - Math.random() * 70,
+      endY: 200 + Math.random() * 220,
+      spin: (Math.random() > 0.5 ? 1 : -1) * (120 + Math.random() * 200),
+      w: 11 + Math.random() * 7,
+      h: 16 + Math.random() * 9,
+      fill: SHARD_COLORS[i % SHARD_COLORS.length],
+    }
+  })
+  return [...grains, ...shards]
+})
 
 // A single rice grain scrubbed by the slide's exit progress: bursts out of the
 // dissolving card, arcs up, tumbles down and fades. Scroll back — it returns.
@@ -1885,9 +2037,17 @@ function FlyingGrain({ exitP, g }) {
       x, y, rotate, opacity,
       willChange: 'transform, opacity',
     }}>
-      <svg width={g.w} height={g.h} viewBox="0 0 6 13">
-        <ellipse cx="3" cy="6.5" rx="2.4" ry="6" fill={g.fill} />
-      </svg>
+      {g.shard ? (
+        <svg width={g.w} height={g.h} viewBox={`0 0 ${g.w} ${g.h}`} style={{ overflow: 'visible' }}>
+          <polygon
+            points={ptsStr(steppedDiamond(g.w / 2, g.h / 2, g.w / 2 - 1, g.h / 2 - 1, 4))}
+            fill={g.fill} stroke="rgba(10,5,16,0.7)" strokeWidth="1" />
+        </svg>
+      ) : (
+        <svg width={g.w} height={g.h} viewBox="0 0 6 13">
+          <ellipse cx="3" cy="6.5" rx="2.4" ry="6" fill={g.fill} />
+        </svg>
+      )}
     </motion.div>
   )
 }
@@ -2100,6 +2260,7 @@ function StatsStrip({ lang }) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 170px), 1fr))',
         gap: '2rem 1.5rem',
         textAlign: 'center',
+        alignItems: 'start',
       }}>
         {STATS.map((s, i) => (
           <motion.div
@@ -2116,7 +2277,14 @@ function StatsStrip({ lang }) {
               textShadow: '0 0 26px rgba(245,158,11,0.35), 0 0 60px rgba(34,211,238,0.18)',
               lineHeight: 1.1,
             }}>
-              <Counter to={s.to} lang={lang} />{s.suffix[lang]}
+              {/* nowrap + smaller suffix keeps every stat on one line, so all
+                  four labels sit on the same baseline */}
+              <span style={{ whiteSpace: 'nowrap' }}>
+                <Counter to={s.to} lang={lang} />
+                <span style={{ fontSize: '0.52em', fontWeight: 800, letterSpacing: '0.02em' }}>
+                  {s.suffix[lang]}
+                </span>
+              </span>
             </div>
             <p style={{
               marginTop: 6,
@@ -2488,7 +2656,7 @@ function HeroSection({ onOrder, lang }) {
       }}>
         {/* The oshpaz stirring his kazan, framed by the neon iwan arch */}
         <div style={{
-          position: 'relative', width: 240, height: 152,
+          position: 'relative', width: 256, height: 152,
           margin: '0 auto 2rem',
         }}>
           {heroVisible && <NeonArch />}
