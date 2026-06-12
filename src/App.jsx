@@ -1717,15 +1717,26 @@ function EraSlide({ era, index, total, progress, lang }) {
   const f = 0.30 / total // crossfade width
   const isFirst = index === 0
   const isLast = index === total - 1
-  const range = [
-    isFirst ? -2 : start - f,
-    isFirst ? -1.99 : start,
-    isLast ? 2 : end,
-    isLast ? 2.01 : end + f,
-  ]
-  const opacity = useTransform(progress, range, [0, 1, 1, 0])
-  const scale   = useTransform(progress, range, [0.94, 1, 1, 1.05])
-  const y       = useTransform(progress, range, [56, 0, 0, -64])
+
+  // All ranges MUST stay inside [0,1] and ascending: Motion promotes
+  // scroll-linked values to native WAAPI scroll timelines, where these
+  // become keyframe offsets — out-of-range values crash the browser API.
+  // Outside its range useTransform clamps, so the first slide simply
+  // starts visible and the last one stays visible.
+  let range, oOut, sOut, yOut
+  if (isFirst) {
+    range = [end, end + f]
+    oOut = [1, 0]; sOut = [1, 1.05]; yOut = [0, -64]
+  } else if (isLast) {
+    range = [start - f, start]
+    oOut = [0, 1]; sOut = [0.94, 1]; yOut = [56, 0]
+  } else {
+    range = [start - f, start, end, end + f]
+    oOut = [0, 1, 1, 0]; sOut = [0.94, 1, 1, 1.05]; yOut = [56, 0, 0, -64]
+  }
+  const opacity = useTransform(progress, range, oOut)
+  const scale   = useTransform(progress, range, sOut)
+  const y       = useTransform(progress, range, yOut)
 
   return (
     <motion.div style={{
