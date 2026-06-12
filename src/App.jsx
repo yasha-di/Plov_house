@@ -1823,12 +1823,44 @@ function PlovCard({ plov, index, onOrder, lang }) {
 //  (Replaced the long horizontal track — на слабых машинах он казался багом.)
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Woven ikat ribbon with black piping between the colours — the band that
-// crowns and grounds every era card (crimson / gold / turquoise / emerald).
-const ERA_BAND =
-  'repeating-linear-gradient(90deg,' +
-  ' #E11D48 0 16px, #14091A 16px 19px, #FACC15 19px 33px, #14091A 33px 36px,' +
-  ' #06B6D4 36px 50px, #14091A 50px 53px, #10B981 53px 67px, #14091A 67px 70px)'
+// Hand-painted ikat ceramic tile — modelled on the lacquered pomegranate jar:
+// crimson field, white→jade flame chevrons with black cores and a gold vein,
+// peacock-eye bodom medallions between the flames. Seamless both ways.
+const CARD_TILE_SVG = (() => {
+  const W = 240, H = 300, STEP = 30, AMP = 16
+  const tri = (k) => (k % 2 ? 1 : -1)
+  const ribbon = (cx, half) => {
+    const left = [], right = []
+    for (let k = 0; k <= H / STEP; k++) {
+      const y = k * STEP
+      const x = cx + tri(k) * AMP
+      left.push(`${x - half} ${y}`)
+      right.push(`${x + half} ${y}`)
+    }
+    return `M${left.join(' L')} L${right.reverse().join(' L')} Z`
+  }
+  const centerline = (cx) => {
+    const pts = []
+    for (let k = 0; k <= H / STEP; k++) pts.push(`${cx + tri(k) * AMP},${k * STEP}`)
+    return pts.join(' ')
+  }
+  const eye = (cx, cy) =>
+    `<path d='M${cx} ${cy - 26} L${cx + 18} ${cy} L${cx} ${cy + 26} L${cx - 18} ${cy} Z' fill='#E8B53A' stroke='#14091A' stroke-width='1.4' stroke-dasharray='3 3'/>` +
+    `<path d='M${cx} ${cy - 16} L${cx + 11} ${cy} L${cx} ${cy + 16} L${cx - 11} ${cy} Z' fill='#1B7F8C'/>` +
+    `<path d='M${cx} ${cy - 8} L${cx + 5.5} ${cy} L${cx} ${cy + 8} L${cx - 5.5} ${cy} Z' fill='#14091A'/>` +
+    `<circle cx='${cx}' cy='${cy - 2}' r='1.6' fill='#F6EFE2'/>`
+  let svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>`
+  svg += `<rect width='${W}' height='${H}' fill='#C8102E'/>`
+  for (const cx of [0, 120, 240]) {
+    svg += `<path d='${ribbon(cx, 19)}' fill='#F6EFE2'/>`
+    svg += `<path d='${ribbon(cx, 11)}' fill='#2E8B57'/>`
+    svg += `<path d='${ribbon(cx, 5)}' fill='#14091A'/>`
+    svg += `<polyline points='${centerline(cx)}' fill='none' stroke='#E8B53A' stroke-width='2.2'/>`
+  }
+  svg += eye(60, 75) + eye(60, 225) + eye(180, 150) + eye(180, 0) + eye(180, 300)
+  return svg + '</svg>'
+})()
+const CARD_TILE = `url("data:image/svg+xml,${encodeURIComponent(CARD_TILE_SVG)}")`
 
 // Flame-feather trio — the organic ikat motif from the style brief.
 function FeatherTrio({ accent, size = 44, opacity = 1 }) {
@@ -1890,93 +1922,80 @@ function EraPanel({ era, lang, fill = true }) {
         width: '100%',
         textAlign: 'center',
         overflow: 'hidden',
-        background: 'linear-gradient(165deg, rgba(32,19,54,0.96) 0%, rgba(13,8,26,0.94) 100%)',
+        // The card IS the painted ceramic: full ikat artwork edge to edge.
+        backgroundColor: '#C8102E',
+        backgroundImage: CARD_TILE,
+        backgroundSize: '240px 300px',
         borderRadius: 26,
-        padding: 'clamp(2.3rem, 4.5vw, 3.1rem) clamp(1.6rem, 4vw, 2.6rem) clamp(2.4rem, 4.5vw, 3.2rem)',
+        padding: 'clamp(1.1rem, 2.6vw, 1.7rem)',
         boxShadow:
-          `0 24px 70px rgba(0,0,0,0.5), 0 0 50px ${era.accent}1F, ` +
-          `inset 0 0 0 1.5px ${era.accent}4D, inset 0 1px 0 rgba(255,255,255,0.08)`,
+          `0 24px 70px rgba(0,0,0,0.55), 0 0 50px ${era.accent}24, ` +
+          'inset 0 0 0 2px rgba(246,239,226,0.3), inset 0 2px 0 rgba(255,255,255,0.2)',
       }}>
-        {/* woven ikat bands crowning and grounding the card */}
-        <div aria-hidden="true" style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: 9,
-          backgroundImage: `${IKAT_FEATHER}, ${ERA_BAND}`,
-          backgroundSize: '24px 24px, auto',
-        }} />
-        <div aria-hidden="true" style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 9,
-          backgroundImage: `${IKAT_FEATHER}, ${ERA_BAND}`,
-          backgroundSize: '24px 24px, auto',
-        }} />
-
-        {/* lacquer sheen — glossy hand-painted ceramic feel */}
+        {/* lacquer gloss over the painting */}
         <div aria-hidden="true" style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(118deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 26%, transparent 44%)',
+          background:
+            'linear-gradient(118deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.05) 24%, transparent 42%, rgba(20,9,26,0.18) 100%)',
         }} />
 
-        {/* feather motifs tucked into the corners */}
-        <div aria-hidden="true" style={{ position: 'absolute', left: 10, top: 16, transform: 'rotate(45deg)' }}>
-          <FeatherTrio accent={era.accent} size={26} opacity={0.55} />
-        </div>
-        <div aria-hidden="true" style={{ position: 'absolute', right: 10, top: 16, transform: 'rotate(-45deg)' }}>
-          <FeatherTrio accent={era.accent} size={26} opacity={0.55} />
-        </div>
-        <div aria-hidden="true" style={{ position: 'absolute', left: 10, bottom: 16, transform: 'rotate(135deg)' }}>
-          <FeatherTrio accent={era.accent} size={26} opacity={0.45} />
-        </div>
-        <div aria-hidden="true" style={{ position: 'absolute', right: 10, bottom: 16, transform: 'rotate(-135deg)' }}>
-          <FeatherTrio accent={era.accent} size={26} opacity={0.45} />
-        </div>
+        {/* carved ink medallion that keeps the text readable on the artwork */}
+        <div style={{
+          position: 'relative',
+          borderRadius: 18,
+          background: 'rgba(16,8,24,0.86)',
+          boxShadow: 'inset 0 0 0 1.5px rgba(246,239,226,0.35), 0 6px 26px rgba(0,0,0,0.45)',
+          padding: 'clamp(1.5rem, 3.5vw, 2.2rem) clamp(1.3rem, 3vw, 2rem)',
+        }}>
+          {/* crowning flame-feather motif */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.9rem' }}>
+            <FeatherTrio accent={era.accent} size={44} />
+          </div>
 
-        {/* crowning flame-feather motif */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.9rem' }}>
-          <FeatherTrio accent={era.accent} size={46} />
-        </div>
+          {/* year chip — lacquered gold-to-accent pill */}
+          <p style={{ marginBottom: '0.9rem' }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 16px',
+              borderRadius: 99,
+              fontSize: '0.72rem', fontWeight: 800,
+              textTransform: 'uppercase', letterSpacing: '0.24em',
+              color: '#14091A',
+              background: `linear-gradient(90deg, ${era.accent} 0%, #FACC15 100%)`,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.35)',
+            }}>
+              {era.year[lang]}
+            </span>
+          </p>
 
-        {/* year chip — lacquered gold-to-accent pill */}
-        <p style={{ marginBottom: '0.9rem' }}>
-          <span style={{
-            display: 'inline-block',
-            padding: '4px 16px',
-            borderRadius: 99,
-            fontSize: '0.72rem', fontWeight: 800,
-            textTransform: 'uppercase', letterSpacing: '0.24em',
-            color: '#14091A',
-            background: `linear-gradient(90deg, ${era.accent} 0%, #FACC15 100%)`,
-            boxShadow: '0 2px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.35)',
+          <h3 style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: 'clamp(1.55rem, 3.8vw, 2.2rem)',
+            fontWeight: 700, color: '#F6EFE2',
+            lineHeight: 1.2,
           }}>
-            {era.year[lang]}
-          </span>
-        </p>
+            {era.title[lang]}
+          </h3>
 
-        <h3 style={{
-          fontFamily: 'var(--font-heading)',
-          fontSize: 'clamp(1.6rem, 4vw, 2.3rem)',
-          fontWeight: 700, color: '#F6EFE2',
-          lineHeight: 1.2,
-        }}>
-          {era.title[lang]}
-        </h3>
+          {/* ornament divider: line — bodom diamond — line */}
+          <div aria-hidden="true" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 10, margin: '0.85rem 0 1rem',
+          }}>
+            <span style={{ height: 1.5, width: 56, background: `linear-gradient(90deg, transparent, ${era.accent})` }} />
+            <svg width="11" height="11" viewBox="0 0 12 12">
+              <path d="M6 0 L12 6 L6 12 L0 6 Z" fill={era.accent} />
+            </svg>
+            <span style={{ height: 1.5, width: 56, background: `linear-gradient(270deg, transparent, ${era.accent})` }} />
+          </div>
 
-        {/* ornament divider: line — bodom diamond — line */}
-        <div aria-hidden="true" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 10, margin: '0.85rem 0 1rem',
-        }}>
-          <span style={{ height: 1.5, width: 56, background: `linear-gradient(90deg, transparent, ${era.accent})` }} />
-          <svg width="11" height="11" viewBox="0 0 12 12">
-            <path d="M6 0 L12 6 L6 12 L0 6 Z" fill={era.accent} />
-          </svg>
-          <span style={{ height: 1.5, width: 56, background: `linear-gradient(270deg, transparent, ${era.accent})` }} />
+          <p style={{
+            fontSize: '0.95rem', lineHeight: 1.72,
+            color: 'rgba(246,239,226,0.78)',
+          }}>
+            {era.text[lang]}
+          </p>
         </div>
-
-        <p style={{
-          fontSize: '0.96rem', lineHeight: 1.75,
-          color: 'var(--text-soft)',
-        }}>
-          {era.text[lang]}
-        </p>
       </div>
     </div>
   )
@@ -2069,28 +2088,35 @@ function EraSlide({ era, index, total, progress, lang }) {
   // starts visible and the last one stays visible.
   // True 3D depth: the card materialises from behind (negative z) and on
   // exit accelerates THROUGH the camera (large positive z + perspective),
-  // dissolving into rice on the way. Perspective makes z growth feel like
-  // forward motion, not mere scaling.
+  // dissolving into rice on the way.
+  // CRITICAL: every range spans the FULL [0,1]. With native scroll-timeline
+  // promotion the browser pads missing 0%/100% keyframes with the element's
+  // base style — partial ranges made dismissed cards reappear on phones.
   let range, oOut, zOut, yOut
   if (isFirst) {
-    range = [end, end + f]
-    oOut = [1, 0]; zOut = [0, 560]; yOut = [0, -8]
+    range = [0, end, end + f, 1]
+    oOut = [1, 1, 0, 0]; zOut = [0, 0, 560, 560]; yOut = [0, 0, -8, -8]
   } else if (isLast) {
-    range = [start - f, start]
-    oOut = [0, 1]; zOut = [-180, 0]; yOut = [20, 0]
+    range = [0, start - f, start, 1]
+    oOut = [0, 0, 1, 1]; zOut = [-180, -180, 0, 0]; yOut = [20, 20, 0, 0]
   } else {
-    range = [start - f, start, end, end + f]
-    oOut = [0, 1, 1, 0]; zOut = [-180, 0, 0, 560]; yOut = [20, 0, 0, -8]
+    range = [0, start - f, start, end, end + f, 1]
+    oOut = [0, 0, 1, 1, 0, 0]
+    zOut = [-180, -180, 0, 0, 560, 560]
+    yOut = [20, 20, 0, 0, -8, -8]
   }
   const opacity = useTransform(progress, range, oOut)
   const z       = useTransform(progress, range, zOut)
   const y       = useTransform(progress, range, yOut)
+  // Belt-and-braces: once fully transparent the layer is truly hidden, no
+  // matter what any compositor decides to do with the opacity animation.
+  const visibility = useTransform(opacity, (v) => (v < 0.02 ? 'hidden' : 'visible'))
 
   // Exit progress 0→1 drives the rice burst (last slide never dissolves).
   const exitP = useTransform(
     progress,
-    isLast ? [0.999, 1] : [end, Math.min(end + f * 0.95, 1)],
-    [0, 1],
+    isLast ? [0, 0.999, 0.9995, 1] : [0, end, Math.min(end + f * 0.95, 0.9995), 1],
+    isLast ? [0, 0, 0, 0] : [0, 0, 1, 1],
   )
   const showGrains = !isLast && !prefersReduced && !IS_LITE
 
@@ -2099,7 +2125,7 @@ function EraSlide({ era, index, total, progress, lang }) {
       {/* The card itself — flies through the camera and dissolves */}
       <motion.div style={{
         position: 'absolute', inset: 0,
-        opacity, z, y,
+        opacity, z, y, visibility,
         transformPerspective: 1100,
         willChange: 'transform, opacity',
       }}>
@@ -2603,6 +2629,9 @@ const inputSt = {
 function HeroSection({ onOrder, lang }) {
   const t = STRINGS[lang]
   const prefersReduced = useReducedMotion()
+  // Phones: no cursor → the chef can't perform, so the hero keeps just the
+  // kazan with gentle steam, centred.
+  const coarse = useCoarsePointer()
   const heroRef = useRef(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
@@ -2654,9 +2683,10 @@ function HeroSection({ onOrder, lang }) {
         scale:   prefersReduced ? 1 : contentScale,
         y:       prefersReduced ? 0 : contentY,
       }}>
-        {/* The oshpaz stirring his kazan, framed by the neon iwan arch */}
+        {/* The oshpaz stirring his kazan, framed by the neon iwan arch.
+            On phones: just the kazan, centred, with gentle steam. */}
         <div style={{
-          position: 'relative', width: 256, height: 152,
+          position: 'relative', width: coarse ? 160 : 256, height: 152,
           margin: '0 auto 2rem',
         }}>
           {heroVisible && <NeonArch />}
@@ -2666,12 +2696,12 @@ function HeroSection({ onOrder, lang }) {
             transition={{ duration: prefersReduced ? 0 : 0.9, ease: [0.34, 1.56, 0.64, 1] }}
             style={{ position: 'relative', width: '100%', height: '100%' }}
           >
-            <ChefOshpaz live={heroVisible} />
-            <div style={{ position: 'absolute', right: 0, bottom: 0 }}>
+            {!coarse && <ChefOshpaz live={heroVisible} />}
+            <div style={{ position: 'absolute', right: coarse ? '50%' : 0, bottom: 0, marginRight: coarse ? -70 : 0 }}>
               <KazanIcon live={heroVisible} />
             </div>
             {/* steam rises from the rim of the kazan */}
-            <div style={{ position: 'absolute', right: 0, bottom: 0, width: 140, height: 78 }}>
+            <div style={{ position: 'absolute', right: coarse ? '50%' : 0, bottom: 0, marginRight: coarse ? -70 : 0, width: 140, height: 78 }}>
               {heroVisible && <HeroSteam />}
             </div>
           </motion.div>
