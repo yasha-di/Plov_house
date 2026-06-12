@@ -2042,54 +2042,57 @@ function EraPanel({ era, lang, fill = true }) {
 }
 
 // Burst configs: one stable random set per era, generated at module load.
-// 18 rice grains + 6 lacquered ikat shards (the card's own ornament breaking
-// off) fly outward on gravity arcs when the card shatters.
+// 18 rice grains + 6 lacquered ikat shards. Every particle follows REAL
+// projectile physics baked into keyframes: launch velocity, gravity pulling
+// it into a parabola, air drag slowing the spin and horizontal travel, and a
+// per-particle launch delay so the card crumbles in waves, not all at once.
 const SHARD_COLORS = ['#E11D48', '#FACC15', '#06B6D4', '#10B981', '#8B5CF6', '#F6EFE2']
 
 const GRAIN_SETS = ERAS.map(() => {
-  const grains = Array.from({ length: 18 }, (_, i) => {
-    const dir = Math.random() * Math.PI * 2
-    const dist = 120 + Math.random() * 280
-    return {
-      id: `g${i}`,
-      sx: (Math.random() - 0.5) * 300,            // start offset from card centre
-      sy: (Math.random() - 0.5) * 180,
-      dx: Math.cos(dir) * dist,                   // horizontal scatter
-      midY: -50 - Math.random() * 90,             // rise of the arc
-      endY: 180 + Math.random() * 260,            // fall below
-      spin: (Math.random() > 0.5 ? 1 : -1) * (200 + Math.random() * 380),
-      w: 5 + Math.random() * 3,
-      h: 11 + Math.random() * 5,
-      fill: Math.random() > 0.4 ? '#F5DEB3' : '#EED9A0',
+  const make = (i, shard) => {
+    const side = Math.random() > 0.5 ? 1 : -1
+    const vx = side * (90 + Math.random() * 240) * (shard ? 0.8 : 1) // launch velocity
+    const vy = -(60 + Math.random() * 170)                          // upward kick
+    const G = 720 + Math.random() * 320                             // gravity
+    const d0 = 0.02 + Math.random() * 0.26                          // launch delay (waves)
+    const spin = (Math.random() > 0.5 ? 1 : -1) * (240 + Math.random() * 420) * (shard ? 0.5 : 1)
+    const sx = (Math.random() - 0.5) * (shard ? 340 : 300)
+    const sy = (Math.random() - 0.5) * 180
+    // Sample the ballistic curve at 5 points after launch.
+    const S = [0.18, 0.38, 0.6, 0.8, 1]
+    const times = [0, d0, ...S.map((s) => d0 + (1 - d0) * s)]
+    const xK = [sx, sx], yK = [sy, sy], rK = [0, 0]
+    for (const s of S) {
+      xK.push(sx + vx * s * (1 - 0.22 * s))          // drag eats horizontal speed
+      yK.push(sy + vy * s + G * s * s)               // parabola: up, then gravity wins
+      rK.push(spin * s * (1.25 - 0.25 * s))          // tumbling slows down
     }
-  })
-  const shards = Array.from({ length: 6 }, (_, i) => {
-    const dir = Math.random() * Math.PI * 2
-    const dist = 140 + Math.random() * 240
     return {
-      id: `s${i}`,
-      shard: true,
-      sx: (Math.random() - 0.5) * 340,
-      sy: (Math.random() - 0.5) * 170,
-      dx: Math.cos(dir) * dist,
-      midY: -60 - Math.random() * 70,
-      endY: 200 + Math.random() * 220,
-      spin: (Math.random() > 0.5 ? 1 : -1) * (120 + Math.random() * 200),
-      w: 11 + Math.random() * 7,
-      h: 16 + Math.random() * 9,
-      fill: SHARD_COLORS[i % SHARD_COLORS.length],
+      id: `${shard ? 's' : 'g'}${i}`,
+      shard,
+      times, xK, yK, rK,
+      oTimes: [0, d0, Math.min(d0 + 0.06, 0.98), 0.8, 1],
+      w: shard ? 11 + Math.random() * 7 : 5 + Math.random() * 3,
+      h: shard ? 16 + Math.random() * 9 : 11 + Math.random() * 5,
+      fill: shard
+        ? SHARD_COLORS[i % SHARD_COLORS.length]
+        : (Math.random() > 0.4 ? '#F5DEB3' : '#EED9A0'),
     }
-  })
-  return [...grains, ...shards]
+  }
+  return [
+    ...Array.from({ length: 18 }, (_, i) => make(i, false)),
+    ...Array.from({ length: 6 }, (_, i) => make(i, true)),
+  ]
 })
 
-// A single rice grain scrubbed by the slide's exit progress: bursts out of the
-// dissolving card, arcs up, tumbles down and fades. Scroll back — it returns.
+// A single particle scrubbed by the slide's exit progress: waits for its
+// launch wave, bursts out on a true gravity parabola, tumbles, fades.
+// Scroll back — the physics runs in reverse and the card reassembles.
 function FlyingGrain({ exitP, g }) {
-  const x = useTransform(exitP, [0, 1], [g.sx, g.sx + g.dx])
-  const y = useTransform(exitP, [0, 0.45, 1], [g.sy, g.sy + g.midY, g.sy + g.endY])
-  const rotate = useTransform(exitP, [0, 1], [0, g.spin])
-  const opacity = useTransform(exitP, [0, 0.1, 0.7, 1], [0, 1, 0.9, 0])
+  const x = useTransform(exitP, g.times, g.xK)
+  const y = useTransform(exitP, g.times, g.yK)
+  const rotate = useTransform(exitP, g.times, g.rK)
+  const opacity = useTransform(exitP, g.oTimes, [0, 0, 1, 0.95, 0])
   return (
     <motion.div style={{
       position: 'absolute', left: '50%', top: '50%',
@@ -2111,43 +2114,61 @@ function FlyingGrain({ exitP, g }) {
   )
 }
 
-// One era slide: rises from the depth, holds, then FLIES FORWARD into the
-// viewer and shatters into rice grains. Transform/opacity only — composited.
+// Per-era stage directions: each card enters from its own side and leaves
+// in its own direction — like plates being passed around the dastarkhan.
+const ERA_DIRS = [
+  { inX: 0,    inY: 70,   inRot: 0,  outX: -170, outY: -90,  outRot: -9 },  // out up-left
+  { inX: 230,  inY: -50,  inRot: 7,  outX: -40,  outY: 140,  outRot: 8 },   // in right, out down
+  { inX: -230, inY: 60,   inRot: -7, outX: 150,  outY: -120, outRot: 10 },  // in left, out up-right
+  { inX: 30,   inY: -190, inRot: -6, outX: 0,    outY: 0,    outRot: 0 },   // in from above, stays
+]
+
+// One era slide: drifts in from its own side out of the depth, settles with
+// an eased deceleration, then accelerates THROUGH the camera with a slight
+// twist while shattering into ballistic rice. Transform/opacity only.
 function EraSlide({ era, index, total, progress, lang }) {
   const prefersReduced = useReducedMotion()
   const start = index / total
   const end = (index + 1) / total
-  const f = 0.34 / total // transition width
+  const f = 0.38 / total // transition width
   const isFirst = index === 0
   const isLast = index === total - 1
+  const d = ERA_DIRS[index % ERA_DIRS.length]
 
-  // All ranges MUST stay inside [0,1] and ascending: Motion promotes
-  // scroll-linked values to native WAAPI scroll timelines, where these
-  // become keyframe offsets — out-of-range values crash the browser API.
-  // Outside its range useTransform clamps, so the first slide simply
-  // starts visible and the last one stays visible.
-  // True 3D depth: the card materialises from behind (negative z) and on
-  // exit accelerates THROUGH the camera (large positive z + perspective),
-  // dissolving into rice on the way.
-  // CRITICAL: every range spans the FULL [0,1]. With native scroll-timeline
-  // promotion the browser pads missing 0%/100% keyframes with the element's
-  // base style — partial ranges made dismissed cards reappear on phones.
-  let range, oOut, zOut, yOut
+  // Mid-keyframes fake easing inside a linear scroll map: by the entry
+  // midpoint the card has covered ~75% of its path (decelerating arrival);
+  // by the exit midpoint only ~45% (accelerating departure).
+  // CRITICAL: every range spans the FULL [0,1] and stays ascending. With
+  // native scroll-timeline promotion the browser pads missing 0%/100%
+  // keyframes with base style — partial ranges made cards reappear on phones.
+  let range, oOut, xOut, yOut, zOut, rOut
   if (isFirst) {
-    range = [0, end, end + f, 1]
-    oOut = [1, 1, 0, 0]; zOut = [0, 0, 560, 560]; yOut = [0, 0, -8, -8]
+    range = [0, end, end + 0.5 * f, end + f, 1]
+    oOut = [1, 1, 0.5, 0, 0]
+    xOut = [0, 0, d.outX * 0.45, d.outX, d.outX]
+    yOut = [0, 0, d.outY * 0.45, d.outY, d.outY]
+    zOut = [0, 0, 250, 540, 540]
+    rOut = [0, 0, d.outRot * 0.45, d.outRot, d.outRot]
   } else if (isLast) {
-    range = [0, start - f, start, 1]
-    oOut = [0, 0, 1, 1]; zOut = [-180, -180, 0, 0]; yOut = [20, 20, 0, 0]
+    range = [0, start - f, start - 0.45 * f, start, 1]
+    oOut = [0, 0, 0.75, 1, 1]
+    xOut = [d.inX, d.inX, d.inX * 0.25, 0, 0]
+    yOut = [d.inY, d.inY, d.inY * 0.25, 0, 0]
+    zOut = [-170, -170, -45, 0, 0]
+    rOut = [d.inRot, d.inRot, d.inRot * 0.25, 0, 0]
   } else {
-    range = [0, start - f, start, end, end + f, 1]
-    oOut = [0, 0, 1, 1, 0, 0]
-    zOut = [-180, -180, 0, 0, 560, 560]
-    yOut = [20, 20, 0, 0, -8, -8]
+    range = [0, start - f, start - 0.45 * f, start, end, end + 0.5 * f, end + f, 1]
+    oOut = [0, 0, 0.75, 1, 1, 0.5, 0, 0]
+    xOut = [d.inX, d.inX, d.inX * 0.25, 0, 0, d.outX * 0.45, d.outX, d.outX]
+    yOut = [d.inY, d.inY, d.inY * 0.25, 0, 0, d.outY * 0.45, d.outY, d.outY]
+    zOut = [-170, -170, -45, 0, 0, 250, 540, 540]
+    rOut = [d.inRot, d.inRot, d.inRot * 0.25, 0, 0, d.outRot * 0.45, d.outRot, d.outRot]
   }
   const opacity = useTransform(progress, range, oOut)
-  const z       = useTransform(progress, range, zOut)
+  const x       = useTransform(progress, range, xOut)
   const y       = useTransform(progress, range, yOut)
+  const z       = useTransform(progress, range, zOut)
+  const rotate  = useTransform(progress, range, rOut)
   // Belt-and-braces: once fully transparent the layer is truly hidden, no
   // matter what any compositor decides to do with the opacity animation.
   const visibility = useTransform(opacity, (v) => (v < 0.02 ? 'hidden' : 'visible'))
@@ -2165,7 +2186,7 @@ function EraSlide({ era, index, total, progress, lang }) {
       {/* The card itself — flies through the camera and dissolves */}
       <motion.div style={{
         position: 'absolute', inset: 0,
-        opacity, z, y, visibility,
+        opacity, x, y, z, rotate, visibility,
         transformPerspective: 1100,
         willChange: 'transform, opacity',
       }}>
