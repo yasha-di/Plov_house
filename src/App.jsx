@@ -509,10 +509,9 @@ function TracePath({ d, stroke, width = 2, seg = 0.14, duration = 4, delay = 0, 
     <>
       {/* ghost ornament — always faintly visible so the pattern reads */}
       <path d={d} stroke={stroke} strokeWidth={width * 0.8} strokeOpacity="0.14" fill="none" strokeLinejoin="round" />
-      {/* wide soft under-stroke = cheap glow */}
-      <motion.path {...shared} stroke={stroke} strokeWidth={width * 3.4} strokeOpacity={0.22} />
-      {/* bright core */}
-      <motion.path {...shared} stroke={stroke} strokeWidth={width} />
+      {/* bright racing core — single animated stroke per path keeps the
+          per-frame SVG update count low (this loop runs forever) */}
+      <motion.path {...shared} stroke={stroke} strokeWidth={width * 1.3} strokeOpacity={0.95} />
     </>
   )
 }
@@ -1097,7 +1096,7 @@ function RiceRain() {
   const coarse = useCoarsePointer()
   if (prefersReduced) return null
   // Phones and weak machines get a lighter shower — steadier FPS.
-  const list = (coarse || IS_LITE) ? PARTICLES.slice(0, 12) : PARTICLES
+  const list = (coarse || IS_LITE) ? PARTICLES.slice(0, 10) : PARTICLES.slice(0, 18)
 
   return (
     <div
@@ -1318,6 +1317,101 @@ function KazanIcon({ live = true }) {
         <path d="M 64 15 Q 70 17 76 15" stroke="rgba(120,90,50,0.35)" strokeWidth="0.8" fill="none" />
       </g>
     </svg>
+  )
+}
+
+// Oshpaz — the plov master in a striped adras chapan and doppi skullcap,
+// stirring the kazan with his kapgir. Hand-drawn SVG: zero dependencies,
+// zero WebGL — the lag-free answer to a 3D hero character.
+function ChefOshpaz({ live = true }) {
+  const prefersReduced = useReducedMotion()
+  const animOn = live && !prefersReduced
+  return (
+    <motion.div
+      aria-hidden="true"
+      style={{ position: 'absolute', left: 6, bottom: 2, width: 100, height: 140 }}
+      animate={animOn ? { y: [0, -2.5, 0] } : {}}
+      transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <svg viewBox="0 0 100 140" width="100" height="140" fill="none"
+        style={{ overflow: 'visible', display: 'block' }}>
+        {/* ground shadow */}
+        <ellipse cx="46" cy="135" rx="26" ry="4" fill="rgba(0,0,0,0.28)" />
+        {/* boots */}
+        <ellipse cx="38" cy="130" rx="7" ry="3.5" fill="#1F1208" />
+        <ellipse cx="58" cy="130" rx="7" ry="3.5" fill="#1F1208" />
+        {/* trousers */}
+        <rect x="33" y="111" width="10" height="18" rx="3" fill="#3A2418" />
+        <rect x="53" y="111" width="10" height="18" rx="3" fill="#3A2418" />
+        {/* chapan robe */}
+        <path d="M26 48 Q46 39 66 48 L72 114 Q46 122 20 114 Z" fill="#B5452A" />
+        {/* adras stripes */}
+        <path d="M36 45 L33 116 L38 117 L40 44 Z" fill="#D4AF37" opacity="0.55" />
+        <path d="M52 43 L52 119 L57 118 L56 44 Z" fill="#D4AF37" opacity="0.55" />
+        <path d="M63 47 L67 114 L71 113 L67 48 Z" fill="#2A9DB8" opacity="0.5" />
+        {/* collar */}
+        <path d="M40 46 L46 60 L52 46" stroke="#F6E9D8" strokeWidth="2.2" />
+        {/* belbog sash */}
+        <rect x="23" y="80" width="46" height="8" rx="2" fill="#FACC15" />
+        <circle cx="32" cy="84" r="3.2" fill="#E0A92B" />
+        <path d="M30 88 L27 98 L32 97 Z" fill="#E0A92B" />
+        {/* far arm resting */}
+        <path d="M30 54 Q21 68 25 82" stroke="#9C3A22" strokeWidth="8" strokeLinecap="round" />
+        <circle cx="25" cy="84" r="3.6" fill="#E9BD8C" />
+        {/* neck + head */}
+        <rect x="42" y="40" width="8" height="6" rx="2" fill="#DBA877" />
+        <ellipse cx="46" cy="29" rx="11.5" ry="11" fill="#E9BD8C" />
+        <circle cx="35.5" cy="30" r="2.2" fill="#DBA877" />
+        {/* doppi skullcap with white motifs */}
+        <path d="M33 19 Q46 6 59 19 L56.5 25 L35.5 25 Z" fill="#14142B" />
+        <path d="M35.5 22 L56.5 22" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" strokeDasharray="2 2" />
+        <circle cx="40" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
+        <circle cx="46" cy="19.5" r="0.8" fill="rgba(255,255,255,0.9)" />
+        <circle cx="52" cy="20.5" r="0.8" fill="rgba(255,255,255,0.9)" />
+        {/* face: brow, eye, nose, moustache */}
+        <path d="M49 25 Q52.5 23.8 55 25.4" stroke="#5A3214" strokeWidth="1" />
+        <circle cx="52.5" cy="28" r="1.3" fill="#2A1505" />
+        <path d="M55.5 30 Q57 31.5 55.5 32.6" stroke="#C99B66" strokeWidth="1" />
+        <path d="M48.5 33.8 Q52 35.4 55.5 33.6" stroke="#3A2418" strokeWidth="1.6" strokeLinecap="round" />
+        {/* stirring arm + kapgir ladle reaching into the kazan */}
+        <motion.g
+          style={{ transformOrigin: '64px 50px', transformBox: 'view-box' }}
+          animate={animOn ? { rotate: [0, 4, 0, -2.5, 0] } : {}}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <path d="M62 52 Q76 46 88 50" stroke="#9C3A22" strokeWidth="8" strokeLinecap="round" />
+          <circle cx="90" cy="51" r="4" fill="#E9BD8C" />
+          <path d="M88 49 L148 60" stroke="#7A4A26" strokeWidth="3.2" strokeLinecap="round" />
+          <ellipse cx="151" cy="62" rx="6.5" ry="4" fill="#9A9AA4" stroke="#6E6E78" strokeWidth="1"
+            transform="rotate(12 151 62)" />
+        </motion.g>
+      </svg>
+    </motion.div>
+  )
+}
+
+// Cinematic light beam over the hero (idea borrowed from the 21st.dev
+// Spotlight) — fades in once, then sits still: zero per-frame cost.
+function SpotlightBeam() {
+  const prefersReduced = useReducedMotion()
+  return (
+    <motion.div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        top: '-25%', left: '-12%',
+        width: '70%', height: '150%',
+        transform: 'rotate(-28deg)',
+        transformOrigin: 'top left',
+        background:
+          'linear-gradient(78deg, rgba(255,243,209,0.10) 0%, rgba(34,211,238,0.05) 45%, transparent 75%)',
+        filter: 'blur(34px)',
+        pointerEvents: 'none',
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: prefersReduced ? 0.5 : [0, 0.9, 0.7] }}
+      transition={{ duration: 2.2, ease: 'easeOut' }}
+    />
   )
 }
 
@@ -1712,7 +1806,7 @@ function EraPanel({ era, lang, fill = true }) {
 // Rice-burst configs: one stable random set per era, generated at module load.
 // Each grain starts somewhere on the card and flies outward on a gravity arc.
 const GRAIN_SETS = ERAS.map(() =>
-  Array.from({ length: 22 }, (_, i) => {
+  Array.from({ length: 16 }, (_, i) => {
     const dir = Math.random() * Math.PI * 2
     const dist = 120 + Math.random() * 280
     return {
@@ -1764,19 +1858,23 @@ function EraSlide({ era, index, total, progress, lang }) {
   // become keyframe offsets — out-of-range values crash the browser API.
   // Outside its range useTransform clamps, so the first slide simply
   // starts visible and the last one stays visible.
-  let range, oOut, sOut, yOut
+  // True 3D depth: the card materialises from behind (negative z) and on
+  // exit accelerates THROUGH the camera (large positive z + perspective),
+  // dissolving into rice on the way. Perspective makes z growth feel like
+  // forward motion, not mere scaling.
+  let range, oOut, zOut, yOut
   if (isFirst) {
     range = [end, end + f]
-    oOut = [1, 0]; sOut = [1, 1.6]; yOut = [0, -10]
+    oOut = [1, 0]; zOut = [0, 560]; yOut = [0, -8]
   } else if (isLast) {
     range = [start - f, start]
-    oOut = [0, 1]; sOut = [0.9, 1]; yOut = [26, 0]
+    oOut = [0, 1]; zOut = [-180, 0]; yOut = [20, 0]
   } else {
     range = [start - f, start, end, end + f]
-    oOut = [0, 1, 1, 0]; sOut = [0.9, 1, 1, 1.6]; yOut = [26, 0, 0, -10]
+    oOut = [0, 1, 1, 0]; zOut = [-180, 0, 0, 560]; yOut = [20, 0, 0, -8]
   }
   const opacity = useTransform(progress, range, oOut)
-  const scale   = useTransform(progress, range, sOut)
+  const z       = useTransform(progress, range, zOut)
   const y       = useTransform(progress, range, yOut)
 
   // Exit progress 0→1 drives the rice burst (last slide never dissolves).
@@ -1789,10 +1887,11 @@ function EraSlide({ era, index, total, progress, lang }) {
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-      {/* The card itself — dissolves as it flies toward the viewer */}
+      {/* The card itself — flies through the camera and dissolves */}
       <motion.div style={{
         position: 'absolute', inset: 0,
-        opacity, scale, y,
+        opacity, z, y,
+        transformPerspective: 1100,
         willChange: 'transform, opacity',
       }}>
         <EraPanel era={era} lang={lang} />
@@ -2316,6 +2415,9 @@ function HeroSection({ onOrder, lang }) {
         background: 'radial-gradient(ellipse 65% 55% at 50% 60%, rgba(245,158,11,0.1) 0%, transparent 70%)',
       }} />
 
+      {/* Cinematic spotlight sweeping across the hero */}
+      {heroVisible && <SpotlightBeam />}
+
       {/* Floating holographic bodom tiles (only animate while hero is visible) */}
       {heroVisible && (
         <>
@@ -2335,9 +2437,9 @@ function HeroSection({ onOrder, lang }) {
         scale:   prefersReduced ? 1 : contentScale,
         y:       prefersReduced ? 0 : contentY,
       }}>
-        {/* Kazan framed by the neon iwan arch */}
+        {/* The oshpaz stirring his kazan, framed by the neon iwan arch */}
         <div style={{
-          position: 'relative', width: 150, height: 130,
+          position: 'relative', width: 240, height: 152,
           margin: '0 auto 2rem',
         }}>
           {heroVisible && <NeonArch />}
@@ -2345,11 +2447,17 @@ function HeroSection({ onOrder, lang }) {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: prefersReduced ? 0 : 0.9, ease: [0.34, 1.56, 0.64, 1] }}
-            style={{ position: 'relative', top: 24 }}
+            style={{ position: 'relative', width: '100%', height: '100%' }}
           >
-            <KazanIcon live={heroVisible} />
+            <ChefOshpaz live={heroVisible} />
+            <div style={{ position: 'absolute', right: 0, bottom: 0 }}>
+              <KazanIcon live={heroVisible} />
+            </div>
+            {/* steam rises from the rim of the kazan */}
+            <div style={{ position: 'absolute', right: 0, bottom: 0, width: 140, height: 78 }}>
+              {heroVisible && <HeroSteam />}
+            </div>
           </motion.div>
-          {heroVisible && <HeroSteam />}
         </div>
 
         <motion.p
