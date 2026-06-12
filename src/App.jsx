@@ -722,76 +722,194 @@ function ScrollProgress() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  CONTACTS & LANGUAGE
+// ═══════════════════════════════════════════════════════════════════════════
+
+const WA_PHONE = '971526113477'
+const TG_USER = 'maxarab9'
+const waUrl = (text) => `https://wa.me/${WA_PHONE}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+const tgUrl = (text) => `https://t.me/${TG_USER}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+const MAPS_URL = 'https://maps.google.com/?q=Honey+Murena+Canggu+Bali'
+
+const INITIAL_LANG =
+  (typeof localStorage !== 'undefined' && localStorage.getItem('plov-lang')) || 'en'
+
+const STRINGS = {
+  en: {
+    docTitle: 'Plov House — real Uzbek plov in Bali',
+    eyebrow: 'From ancient Uzbekistan — to your table in Bali',
+    title: 'PLOV',
+    tagline: 'Kazan-cooked over open fire. A IX-century recipe, served in Canggu',
+    cta: 'Order plov',
+    ctaNow: 'Order now',
+    scrollHint: 'Scroll down',
+    menuTitle: 'Kinds of plov',
+    menuSub: 'Each recipe keeps centuries-old secrets of the Uzbek kitchen',
+    perPortion: 'portion · ~400 g',
+    orderThis: 'Order this',
+    journeyTitle: 'Through the centuries',
+    journeySub: 'One recipe — twelve centuries of travel',
+    servicesTitle: 'How to get your plov',
+    servicesSub: 'Three ways to taste it in Bali',
+    quote: <>«Plov is not just food.<br />It is a ritual that gathers people together»</>,
+    traditionText:
+      'Uzbek plov has been known since the IX century — Avicenna called it «food that strengthens body and spirit». It is traditionally cooked by men in a big cast-iron kazan over open fire: for weddings, for holidays, or simply to gather the people you love. We carried that fire all the way across the ocean — to Bali.',
+    footerBrandSub: <>Real Uzbek plov<br />in Bali, Indonesia</>,
+    contactsHead: 'Contacts',
+    whereHead: 'Where',
+    whereName: 'Honey Murena · Canggu',
+    whereArea: 'Bali, Indonesia',
+    infoHead: 'Service',
+    infoLines: ['Canggu & nearby', 'Delivery · chef on-site', 'Daily 10:00 – 22:00'],
+    orderHead: 'Order',
+    orderBtn: 'Place an order',
+    orderNote: 'Big kazan from 3 kg · chef on-site by booking',
+    copyright: '© 2026 Plov House · Honey Murena, Canggu',
+    location: 'Bali, Indonesia · IX century — 2077',
+    mTitle: 'Order plov',
+    mSub: 'Pick the options — we finish the order in chat',
+    mName: 'Your name (optional)',
+    mNamePh: 'John',
+    mPlov: 'Kind of plov',
+    mFormat: 'Format',
+    formats: {
+      portions: 'Portions — delivery',
+      chef: 'Chef on-site — villa / event',
+      kazan: 'Big kazan — by kilogram',
+    },
+    mQtyPortions: 'How many portions',
+    mQtyKg: 'How many kilograms',
+    mWa: 'Order in WhatsApp',
+    mTg: 'Order in Telegram',
+    mNote: 'We reply within minutes',
+    msg: {
+      hello: 'Hello! I would like to order plov.',
+      type: 'Plov',
+      format: 'Format',
+      qty: 'Quantity',
+      name: 'Name',
+      portionsUnit: 'portion(s)',
+      kgUnit: 'kg',
+    },
+  },
+  ru: {
+    docTitle: 'Plov House — настоящий узбекский плов на Бали',
+    eyebrow: 'Из глубины веков — к вашему столу на Бали',
+    title: 'ПЛОВ',
+    tagline: 'Казанный, на открытом огне. Рецепт IX века — теперь в Чангу',
+    cta: 'Заказать плов',
+    ctaNow: 'Заказать сейчас',
+    scrollHint: 'Листать вниз',
+    menuTitle: 'Виды плова',
+    menuSub: 'Каждый рецепт хранит вековые секреты узбекской кухни',
+    perPortion: 'порция · ~400 г',
+    orderThis: 'Заказать этот',
+    journeyTitle: 'Сквозь века',
+    journeySub: 'Один рецепт — двенадцать столетий пути',
+    servicesTitle: 'Как получить плов',
+    servicesSub: 'Три способа попробовать его на Бали',
+    quote: <>«Плов — это не просто еда.<br />Это ритуал, собирающий людей вместе»</>,
+    traditionText:
+      'Узбекский плов известен с IX века — Авиценна называл его «пищей, укрепляющей тело и дух». Традиционно его готовят мужчины в большом чугунном казане на открытом огне: на свадьбы, праздники или просто ради встречи с близкими. Мы перенесли этот огонь через океан — на Бали.',
+    footerBrandSub: <>Настоящий узбекский плов<br />на Бали, Индонезия</>,
+    contactsHead: 'Контакты',
+    whereHead: 'Где мы',
+    whereName: 'Honey Murena · Чангу',
+    whereArea: 'Бали, Индонезия',
+    infoHead: 'Сервис',
+    infoLines: ['Чангу и окрестности', 'Доставка · шеф на месте', 'Ежедневно 10:00 – 22:00'],
+    orderHead: 'Заказать',
+    orderBtn: 'Оформить заказ',
+    orderNote: 'Большой казан от 3 кг · шеф на месте по записи',
+    copyright: '© 2026 Plov House · Honey Murena, Чангу',
+    location: 'Бали, Индонезия · IX век — 2077',
+    mTitle: 'Заказать плов',
+    mSub: 'Выберите опции — заказ завершим в чате',
+    mName: 'Ваше имя (необязательно)',
+    mNamePh: 'Алишер',
+    mPlov: 'Вид плова',
+    mFormat: 'Формат',
+    formats: {
+      portions: 'Порции — доставка',
+      chef: 'Шеф на месте — вилла / праздник',
+      kazan: 'Большой казан — килограммами',
+    },
+    mQtyPortions: 'Сколько порций',
+    mQtyKg: 'Сколько килограммов',
+    mWa: 'Заказать в WhatsApp',
+    mTg: 'Заказать в Telegram',
+    mNote: 'Отвечаем в течение нескольких минут',
+    msg: {
+      hello: 'Здравствуйте! Хочу заказать плов.',
+      type: 'Плов',
+      format: 'Формат',
+      qty: 'Количество',
+      name: 'Имя',
+      portionsUnit: 'порц.',
+      kgUnit: 'кг',
+    },
+  },
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  DATA
 // ═══════════════════════════════════════════════════════════════════════════
 
 const PLOV_TYPES = [
   {
     id: 'festive',
-    name: 'Праздничный',
-    desc: 'Бараньи рёбра на медленном огне, целые головки чеснока, айва и сухофрукты. Каждая порция — торжество вкуса, которое готовят к свадьбам и особым событиям.',
     accent: '#991B1B',
     accentLight: '#F87171',
-    tag: 'Для торжества',
-    weight: '5 кг / казан',
+    name: { en: 'Festive', ru: 'Праздничный' },
+    tag:  { en: 'Celebration', ru: 'Для торжества' },
+    desc: {
+      en: 'Lamb ribs slow-cooked over fire, whole garlic heads, quince and dried fruit. The plov they cook for weddings and the biggest days.',
+      ru: 'Бараньи рёбра на медленном огне, целые головки чеснока, айва и сухофрукты. Такой плов готовят к свадьбам и особым событиям.',
+    },
   },
   {
     id: 'tashkent',
-    name: 'Ташкентский',
-    desc: 'Классика столицы: жёлтая морковь, хлопковое масло, рис дев-зира. Насыщенный зирвак томится три часа — результат говорит сам за себя.',
     accent: '#C46B39',
     accentLight: '#F0A968',
-    tag: 'Классика',
-    weight: '3 кг / казан',
+    name: { en: 'Tashkent-style', ru: 'Ташкентский' },
+    tag:  { en: 'Classic', ru: 'Классика' },
+    desc: {
+      en: 'The classic recipe: yellow carrots, cottonseed oil, devzira rice. The zirvak simmers for three hours — and you can taste every one of them.',
+      ru: 'Классический рецепт: жёлтая морковь, хлопковое масло, рис дев-зира. Зирвак томится три часа — и это чувствуется.',
+    },
   },
   {
     id: 'chaikhansky',
-    name: 'Чайханский',
-    desc: 'Приготовлен мастером у чайханы в большом казане. Лёгкий аромат зиры, изюм кишмиш и нут делают вкус по-настоящему незабываемым.',
     accent: '#B8860B',
     accentLight: '#F5C84B',
-    tag: 'Уличный',
-    weight: '4 кг / казан',
+    name: { en: 'Chaikhana', ru: 'Чайханский' },
+    tag:  { en: 'Street-style', ru: 'Уличный' },
+    desc: {
+      en: 'Cooked the way teahouse masters feed a hundred guests: light cumin smoke, kishmish raisins and chickpeas. Unforgettable.',
+      ru: 'Как готовят мастера у чайханы на сто гостей: лёгкий дымок зиры, изюм кишмиш и нут. Незабываемо.',
+    },
   },
   {
     id: 'shavlya',
-    name: 'Шавля',
-    desc: 'Домашний брат плова — больше овощей, сочный томатный соус, нежный рис. Согревает изнутри, как мамина кухня в зимний день.',
     accent: '#6B3A2A',
     accentLight: '#D69A6E',
-    tag: 'Домашний',
-    weight: '3 кг / казан',
+    name: { en: 'Shavlya', ru: 'Шавля' },
+    tag:  { en: 'Homestyle', ru: 'Домашний' },
+    desc: {
+      en: 'Plov’s cozy cousin — more vegetables, a juicy tomato base, tender rice. Comfort food, Uzbek edition.',
+      ru: 'Домашний брат плова — больше овощей, сочный томатный соус, нежный рис. Уют в тарелке.',
+    },
   },
 ]
 
-const STEPS = [
+const SERVICES = [
   {
     num: '01',
-    title: 'Выберите плов',
-    desc: 'Праздничный, ташкентский или чайханский — каждый вид готовится по своему рецепту и характеру.',
-    Icon: () => (
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="9 11 12 14 22 4" />
-        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-      </svg>
-    ),
-  },
-  {
-    num: '02',
-    title: 'Оставьте заявку',
-    desc: 'Укажите имя, телефон и удобное время. Перезвоним в течение 5 минут для подтверждения заказа.',
-    Icon: () => (
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 3.07 9.8 19.79 19.79 0 0 1 .01 1.18 2 2 0 0 1 2 0h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L6.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-      </svg>
-    ),
-  },
-  {
-    num: '03',
-    title: 'Получите доставку',
-    desc: 'Горячий казанный плов приедет к вам в течение 60 минут. Доставляем в пределах всего Ташкента.',
+    title: { en: 'Delivery by portion', ru: 'Порционная доставка' },
+    desc: {
+      en: 'Hot kazan plov around Canggu — order from a single portion. About 60 minutes door to door.',
+      ru: 'Горячий казанный плов по Чангу — от одной порции. Около 60 минут до двери.',
+    },
     Icon: () => (
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -802,44 +920,88 @@ const STEPS = [
       </svg>
     ),
   },
+  {
+    num: '02',
+    title: { en: 'Chef at your villa', ru: 'Шеф у вас на вилле' },
+    desc: {
+      en: 'We bring the kazan, the fire and the master — live cooking at your villa or event. The show is included.',
+      ru: 'Привозим казан, огонь и мастера — готовим прямо у вас на вилле или празднике. Шоу прилагается.',
+    },
+    Icon: () => (
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2c1.8 2.4 4 4.2 4 7a4 4 0 0 1-8 0c0-2.8 2.2-4.6 4-7z" />
+        <path d="M5 21c0-3 3-4.5 7-4.5s7 1.5 7 4.5" />
+      </svg>
+    ),
+  },
+  {
+    num: '03',
+    title: { en: 'Big kazan for events', ru: 'Большой казан на праздник' },
+    desc: {
+      en: 'Weddings and big parties — we cook by the kilogram, from 3 kg per kazan. The classic large-order format.',
+      ru: 'Свадьбы и большие компании — готовим килограммами, от 3 кг на казан. Классика больших заказов.',
+    },
+    Icon: () => (
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9h18" />
+        <path d="M4 9c0 7 3.5 10 8 10s8-3 8-10" />
+        <path d="M3 9 1.5 7.5M21 9l1.5-1.5" />
+        <ellipse cx="12" cy="7.5" rx="6.5" ry="1.8" />
+      </svg>
+    ),
+  },
 ]
 
 const ERAS = [
   {
     num: '01',
-    year: 'IX век',
-    title: 'Рождение рецепта',
-    text: 'Великий врач Авиценна описывает плов как средство, возвращающее силы телу и ясность уму. Семь компонентов — семь начал жизни: лук, морковь, мясо, жир, соль, вода и рис.',
+    year: { en: 'IX cent.', ru: 'IX век' },
+    title: { en: 'Birth of the recipe', ru: 'Рождение рецепта' },
+    text: {
+      en: 'The great physician Avicenna prescribes plov as a remedy that restores strength to the body and clarity to the mind. Seven ingredients — seven foundations of life: onion, carrot, meat, fat, salt, water and rice.',
+      ru: 'Великий врач Авиценна описывает плов как средство, возвращающее силы телу и ясность уму. Семь компонентов — семь начал жизни: лук, морковь, мясо, жир, соль, вода и рис.',
+    },
     accent: '#F59E0B',
   },
   {
     num: '02',
-    year: 'XIV век',
-    title: 'Шёлковый путь',
-    text: 'Караваны разносят аромат зирвака от Самарканда до Бухары. На каждой стоянке плов готовят по-своему — так рождаются десятки региональных школ, дошедших до наших дней.',
+    year: { en: 'XIV cent.', ru: 'XIV век' },
+    title: { en: 'The Silk Road', ru: 'Шёлковый путь' },
+    text: {
+      en: 'Caravans carry the aroma of zirvak from Samarkand to Bukhara. Every stop cooks it its own way — dozens of regional schools are born, and they live to this day.',
+      ru: 'Караваны разносят аромат зирвака от Самарканда до Бухары. На каждой стоянке плов готовят по-своему — так рождаются десятки региональных школ, дошедших до наших дней.',
+    },
     accent: '#E11D48',
   },
   {
     num: '03',
-    year: 'XX век',
-    title: 'Эпоха чайханы',
-    text: 'Ошпазы готовят в казанах на сотни гостей. Утренний плов становится ритуалом: его подают на рассвете, и опоздавшим достаются только истории о том, каким он был.',
+    year: { en: 'XX cent.', ru: 'XX век' },
+    title: { en: 'The chaikhana era', ru: 'Эпоха чайханы' },
+    text: {
+      en: 'Oshpaz masters cook for hundreds of guests at once. Morning plov becomes a ritual: served at dawn — latecomers only get the stories of how good it was.',
+      ru: 'Ошпазы готовят в казанах на сотни гостей. Утренний плов становится ритуалом: его подают на рассвете, и опоздавшим достаются только истории о том, каким он был.',
+    },
     accent: '#10B981',
   },
   {
     num: '04',
-    year: '2077',
-    title: 'Плов будущего',
-    text: 'Рецепт не меняется тысячу лет — меняется только скорость доставки. Казан, огонь и руки мастера остаются. Всё остальное мы берём на себя: 60 минут — и история у вас на столе.',
+    year: { en: 'Bali · now', ru: 'Бали · сейчас' },
+    title: { en: 'Plov crosses the ocean', ru: 'Плов через океан' },
+    text: {
+      en: 'The recipe has not changed in a thousand years — only the map has. Today the kazan smokes by the ocean in Canggu, and twelve centuries of history land on your table.',
+      ru: 'Рецепт не меняется тысячу лет — меняется только география. Сегодня казан дымится у океана в Чангу, и двенадцать веков истории приезжают к вам на стол.',
+    },
     accent: '#22D3EE',
   },
 ]
 
 const STATS = [
-  { to: 11,   suffix: ' веков', label: 'живой традиции' },
-  { to: 60,   suffix: ' мин',   label: 'до вашей двери' },
-  { to: 4,    suffix: ' вида',  label: 'плова в меню' },
-  { to: 1500, suffix: '+',      label: 'довольных гостей' },
+  { to: 11,   suffix: { en: ' centuries', ru: ' веков' }, label: { en: 'of living tradition', ru: 'живой традиции' } },
+  { to: 60,   suffix: { en: ' min',       ru: ' мин' },   label: { en: 'around Canggu',       ru: 'по Чангу' } },
+  { to: 4,    suffix: { en: ' kinds',     ru: ' вида' },  label: { en: 'of plov on the menu', ru: 'плова в меню' } },
+  { to: 1500, suffix: { en: '+',          ru: '+' },      label: { en: 'happy guests',        ru: 'довольных гостей' } },
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1324,7 +1486,7 @@ function SectionTitle({ children, sub }) {
 //  PLOV CARD — 3D tilt + steam + neon hover
 // ═══════════════════════════════════════════════════════════════════════════
 
-function PlovCard({ plov, index, onOrder }) {
+function PlovCard({ plov, index, onOrder, lang }) {
   const [hovered, setHovered] = useState(false)
   const prefersReduced = useReducedMotion()
   const coarse = useCoarsePointer()
@@ -1401,10 +1563,10 @@ function PlovCard({ plov, index, onOrder }) {
           background: `${plov.accentLight}1F`,
           padding: '3px 10px', borderRadius: 99,
         }}>
-          {plov.tag}
+          {plov.tag[lang]}
         </span>
         <span style={{ fontSize: '0.78rem', color: 'var(--text-faint)', fontWeight: 500 }}>
-          {plov.weight}
+          {STRINGS[lang].perPortion}
         </span>
       </div>
 
@@ -1414,7 +1576,7 @@ function PlovCard({ plov, index, onOrder }) {
         color: 'var(--text)',
         marginBottom: '0.55rem',
       }}>
-        {plov.name}
+        {plov.name[lang]}
       </h3>
 
       <p style={{
@@ -1422,7 +1584,7 @@ function PlovCard({ plov, index, onOrder }) {
         color: 'var(--text-soft)', flexGrow: 1,
         marginBottom: '1.25rem',
       }}>
-        {plov.desc}
+        {plov.desc[lang]}
       </p>
 
       <button
@@ -1448,23 +1610,23 @@ function PlovCard({ plov, index, onOrder }) {
           e.currentTarget.style.color = plov.accentLight
         }}
       >
-        Заказать этот
+        {STRINGS[lang].orderThis}
       </button>
     </motion.article>
   )
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  JOURNEY — vertical scroll drives a horizontal ride through the centuries
+//  JOURNEY — eras crossfade in place: each one rises in, then evaporates.
+//  (Replaced the long horizontal track — на слабых машинах он казался багом.)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function EraPanel({ era, fullWidth = true }) {
+function EraPanel({ era, lang, fill = true }) {
   return (
     <div
       style={{
-        width: fullWidth ? '100vw' : '100%',
-        flexShrink: 0,
-        minHeight: fullWidth ? '100svh' : 'auto',
+        width: '100%',
+        height: fill ? '100%' : 'auto',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1481,7 +1643,7 @@ function EraPanel({ era, fullWidth = true }) {
         justifyContent: 'center',
         fontFamily: 'var(--font-heading)',
         fontWeight: 900,
-        fontSize: 'clamp(6rem, 22vw, 18rem)',
+        fontSize: 'clamp(3.2rem, 10vw, 9rem)',
         color: 'transparent',
         WebkitTextStroke: `1px ${era.accent}26`,
         userSelect: 'none',
@@ -1489,7 +1651,7 @@ function EraPanel({ era, fullWidth = true }) {
         letterSpacing: '-0.02em',
         whiteSpace: 'nowrap',
       }}>
-        {era.year}
+        {era.year[lang]}
       </div>
 
       {/* Era radial tint */}
@@ -1524,7 +1686,7 @@ function EraPanel({ era, fullWidth = true }) {
           textTransform: 'uppercase', letterSpacing: '0.28em',
           color: era.accent, marginBottom: '0.6rem',
         }}>
-          {era.year}
+          {era.year[lang]}
         </p>
 
         <h3 style={{
@@ -1533,34 +1695,63 @@ function EraPanel({ era, fullWidth = true }) {
           fontWeight: 700, color: 'var(--cream)',
           marginBottom: '0.9rem', lineHeight: 1.2,
         }}>
-          {era.title}
+          {era.title[lang]}
         </h3>
 
         <p style={{
           fontSize: '0.96rem', lineHeight: 1.75,
           color: 'var(--text-soft)',
         }}>
-          {era.text}
+          {era.text[lang]}
         </p>
       </div>
     </div>
   )
 }
 
-function JourneySection() {
+// One era slide: rises in from below, holds, then evaporates upward while the
+// next one materialises behind it. Transform/opacity only — fully composited.
+function EraSlide({ era, index, total, progress, lang }) {
+  const start = index / total
+  const end = (index + 1) / total
+  const f = 0.30 / total // crossfade width
+  const isFirst = index === 0
+  const isLast = index === total - 1
+  const range = [
+    isFirst ? -2 : start - f,
+    isFirst ? -1.99 : start,
+    isLast ? 2 : end,
+    isLast ? 2.01 : end + f,
+  ]
+  const opacity = useTransform(progress, range, [0, 1, 1, 0])
+  const scale   = useTransform(progress, range, [0.94, 1, 1, 1.05])
+  const y       = useTransform(progress, range, [56, 0, 0, -64])
+
+  return (
+    <motion.div style={{
+      position: 'absolute', inset: 0,
+      opacity, scale, y,
+      willChange: 'transform, opacity',
+    }}>
+      <EraPanel era={era} lang={lang} />
+    </motion.div>
+  )
+}
+
+function JourneySection({ lang }) {
   const prefersReduced = useReducedMotion()
+  const t = STRINGS[lang]
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  const x = useTransform(scrollYProgress, [0, 1], ['0vw', `-${(ERAS.length - 1) * 100}vw`])
 
-  // Reduced motion: plain vertical stack, no scroll hijack.
+  // Reduced motion: plain vertical stack, no scroll choreography.
   if (prefersReduced) {
     return (
       <section id="journey" style={{ position: 'relative', zIndex: 'var(--z-content)' }}>
         <div style={{ padding: 'clamp(3rem, 8vw, 5rem) 0 0' }}>
-          <SectionTitle sub="Один рецепт — двенадцать столетий пути">Сквозь века</SectionTitle>
+          <SectionTitle sub={t.journeySub}>{t.journeyTitle}</SectionTitle>
         </div>
-        {ERAS.map((era) => <EraPanel key={era.num} era={era} fullWidth={false} />)}
+        {ERAS.map((era) => <EraPanel key={era.num} era={era} lang={lang} fill={false} />)}
       </section>
     )
   }
@@ -1579,9 +1770,13 @@ function JourneySection() {
         position: 'sticky', top: 0,
         height: '100svh',
         overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
       }}>
+        {/* Era slides, stacked and crossfading */}
+        {ERAS.map((era, i) => (
+          <EraSlide key={era.num} era={era} index={i} total={ERAS.length}
+            progress={scrollYProgress} lang={lang} />
+        ))}
+
         {/* Sticky section header */}
         <div style={{
           position: 'absolute', top: 'clamp(1.5rem, 4vh, 3rem)', left: 0, right: 0,
@@ -1592,29 +1787,18 @@ function JourneySection() {
             textTransform: 'uppercase', letterSpacing: '0.3em',
             color: 'var(--gold)', marginBottom: '0.3rem',
           }}>
-            Сквозь века
+            {t.journeyTitle}
           </p>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-faint)' }}>
-            Один рецепт — двенадцать столетий пути
+            {t.journeySub}
           </p>
         </div>
-
-        {/* The horizontal track itself */}
-        <motion.div style={{
-          x,
-          display: 'flex',
-          width: `${ERAS.length * 100}vw`,
-          flexGrow: 1,
-          willChange: 'transform',
-        }}>
-          {ERAS.map((era) => <EraPanel key={era.num} era={era} />)}
-        </motion.div>
 
         {/* Progress thread at the bottom — fills as you travel */}
         <div style={{
           position: 'absolute', bottom: 'clamp(1.2rem, 4vh, 2.4rem)', left: '50%',
           transform: 'translateX(-50%)',
-          width: 'min(60vw, 320px)',
+          width: 'min(70vw, 360px)',
           zIndex: 2,
         }}>
           <div style={{
@@ -1637,7 +1821,7 @@ function JourneySection() {
                 color: 'var(--text-faint)',
                 textTransform: 'uppercase',
               }}>
-                {era.year}
+                {era.year[lang]}
               </span>
             ))}
           </div>
@@ -1651,7 +1835,7 @@ function JourneySection() {
 //  STATS — counters that spin up when scrolled into view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function Counter({ to, duration = 1.5 }) {
+function Counter({ to, duration = 1.5, lang = 'en' }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
   const prefersReduced = useReducedMotion()
@@ -1671,10 +1855,10 @@ function Counter({ to, duration = 1.5 }) {
     return () => cancelAnimationFrame(raf)
   }, [inView, prefersReduced, to, duration])
 
-  return <span ref={ref}>{val.toLocaleString('ru-RU')}</span>
+  return <span ref={ref}>{val.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US')}</span>
 }
 
-function StatsStrip() {
+function StatsStrip({ lang }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
   const prefersReduced = useReducedMotion()
@@ -1699,7 +1883,7 @@ function StatsStrip() {
       }}>
         {STATS.map((s, i) => (
           <motion.div
-            key={s.label}
+            key={s.to}
             initial={{ opacity: 0, y: 26 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: prefersReduced ? 0 : 0.5, delay: prefersReduced ? 0 : i * 0.1 }}
@@ -1712,7 +1896,7 @@ function StatsStrip() {
               textShadow: '0 0 26px rgba(245,158,11,0.35), 0 0 60px rgba(34,211,238,0.18)',
               lineHeight: 1.1,
             }}>
-              <Counter to={s.to} />{s.suffix}
+              <Counter to={s.to} lang={lang} />{s.suffix[lang]}
             </div>
             <p style={{
               marginTop: 6,
@@ -1720,7 +1904,7 @@ function StatsStrip() {
               color: 'var(--text-soft)',
               letterSpacing: '0.02em',
             }}>
-              {s.label}
+              {s.label[lang]}
             </p>
           </motion.div>
         ))}
@@ -1733,9 +1917,28 @@ function StatsStrip() {
 //  ORDER MODAL
 // ═══════════════════════════════════════════════════════════════════════════
 
-function OrderModal({ isOpen, onClose, defaultPlov }) {
-  const [form, setForm] = useState({ name: '', phone: '', plov: defaultPlov || '' })
-  const [submitted, setSubmitted] = useState(false)
+function WaIcon({ size = 18 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
+    </svg>
+  )
+}
+
+function TgIcon({ size = 18 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
+      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+    </svg>
+  )
+}
+
+function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
+  const t = STRINGS[lang]
+  const [plov, setPlov] = useState(defaultPlov || PLOV_TYPES[0].id)
+  const [format, setFormat] = useState('portions')
+  const [qty, setQty] = useState(2)
+  const [name, setName] = useState('')
   const prefersReduced = useReducedMotion()
   const firstInputRef = useRef(null)
 
@@ -1744,7 +1947,7 @@ function OrderModal({ isOpen, onClose, defaultPlov }) {
   const [prevOpen, setPrevOpen] = useState(isOpen)
   if (isOpen !== prevOpen) {
     setPrevOpen(isOpen)
-    if (isOpen && defaultPlov) setForm(f => ({ ...f, plov: defaultPlov }))
+    if (isOpen && defaultPlov) setPlov(defaultPlov)
   }
 
   useEffect(() => {
@@ -1761,14 +1964,27 @@ function OrderModal({ isOpen, onClose, defaultPlov }) {
     return () => document.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setSubmitted(true)
-    setTimeout(() => {
-      onClose()
-      setSubmitted(false)
-      setForm({ name: '', phone: '', plov: '' })
-    }, 2200)
+  const minQty = format === 'kazan' ? 3 : 1
+  const setFormatSafe = (v) => {
+    setFormat(v)
+    if (v === 'kazan' && qty < 3) setQty(3)
+  }
+
+  // The order is finished in the messenger of choice with a pre-filled text.
+  const sendVia = (kind) => {
+    const p = PLOV_TYPES.find((x) => x.id === plov)
+    const lines = [
+      t.msg.hello,
+      `• ${t.msg.type}: ${p ? p.name[lang] : ''}`,
+      `• ${t.msg.format}: ${t.formats[format]}`,
+    ]
+    if (format !== 'chef') {
+      lines.push(`• ${t.msg.qty}: ${qty} ${format === 'kazan' ? t.msg.kgUnit : t.msg.portionsUnit}`)
+    }
+    if (name.trim()) lines.push(`• ${t.msg.name}: ${name.trim()}`)
+    const msg = lines.join('\n')
+    window.open(kind === 'wa' ? waUrl(msg) : tgUrl(msg), '_blank', 'noopener,noreferrer')
+    onClose()
   }
 
   return (
@@ -1821,7 +2037,7 @@ function OrderModal({ isOpen, onClose, defaultPlov }) {
             }}
           >
             <button
-              aria-label="Закрыть форму"
+              aria-label="Close"
               onClick={onClose}
               style={{
                 position: 'absolute', top: 14, right: 14,
@@ -1847,102 +2063,124 @@ function OrderModal({ isOpen, onClose, defaultPlov }) {
               color: 'var(--brown-dark)',
               marginBottom: '0.3rem',
             }}>
-              Заказать плов
+              {t.mTitle}
             </h2>
             <p style={{ fontSize: '0.88rem', color: '#8B6F56', marginBottom: '1.6rem' }}>
-              Заполните форму — перезвоним в течение 5 минут
+              {t.mSub}
             </p>
 
-            {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{ textAlign: 'center', padding: '2rem 0' }}
-              >
-                <div style={{
-                  width: 64, height: 64, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #C46B39, #991B1B)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 1rem',
-                }}>
-                  <svg viewBox="0 0 24 24" width="28" height="28" fill="none"
-                    stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              <div>
+                <label htmlFor="order-plov" style={labelSt}>{t.mPlov}</label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    id="order-plov" ref={firstInputRef}
+                    value={plov}
+                    onChange={e => setPlov(e.target.value)}
+                    className="plov-input"
+                    style={{ ...inputSt, cursor: 'pointer', appearance: 'none', paddingRight: '2.5rem' }}
+                  >
+                    {PLOV_TYPES.map(p => (
+                      <option key={p.id} value={p.id}>{p.name[lang]}</option>
+                    ))}
+                  </select>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                    stroke="var(--brown-mid)" strokeWidth="2"
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                    <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </div>
-                <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', color: 'var(--brown-dark)', marginBottom: '0.4rem' }}>
-                  Заявка принята!
-                </p>
-                <p style={{ fontSize: '0.9rem', color: '#8B6F56' }}>
-                  Скоро свяжемся с вами
-                </p>
-              </motion.div>
-            ) : (
-              <form onSubmit={handleSubmit}
-                style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              </div>
+
+              <div>
+                <label htmlFor="order-format" style={labelSt}>{t.mFormat}</label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    id="order-format"
+                    value={format}
+                    onChange={e => setFormatSafe(e.target.value)}
+                    className="plov-input"
+                    style={{ ...inputSt, cursor: 'pointer', appearance: 'none', paddingRight: '2.5rem' }}
+                  >
+                    <option value="portions">{t.formats.portions}</option>
+                    <option value="chef">{t.formats.chef}</option>
+                    <option value="kazan">{t.formats.kazan}</option>
+                  </select>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                    stroke="var(--brown-mid)" strokeWidth="2"
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
+
+              {format !== 'chef' && (
                 <div>
-                  <label htmlFor="order-name" style={labelSt}>Ваше имя</label>
+                  <label htmlFor="order-qty" style={labelSt}>
+                    {format === 'kazan' ? t.mQtyKg : t.mQtyPortions}
+                  </label>
                   <input
-                    id="order-name" ref={firstInputRef}
-                    type="text" required
-                    placeholder="Алишер Навоий"
-                    value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    id="order-qty"
+                    type="number"
+                    min={minQty} max={100} step={1}
+                    value={qty}
+                    onChange={e => setQty(Math.max(minQty, Math.min(100, Number(e.target.value) || minQty)))}
                     className="plov-input"
                     style={inputSt}
                   />
                 </div>
-                <div>
-                  <label htmlFor="order-phone" style={labelSt}>Телефон</label>
-                  <input
-                    id="order-phone"
-                    type="tel" required
-                    placeholder="+998 90 123 45 67"
-                    value={form.phone}
-                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                    className="plov-input"
-                    style={inputSt}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="order-plov" style={labelSt}>Вид плова</label>
-                  <div style={{ position: 'relative' }}>
-                    <select
-                      id="order-plov" required
-                      value={form.plov}
-                      onChange={e => setForm(f => ({ ...f, plov: e.target.value }))}
-                      className="plov-input"
-                      style={{ ...inputSt, cursor: 'pointer', appearance: 'none', paddingRight: '2.5rem' }}
-                    >
-                      <option value="">Выберите вид...</option>
-                      {PLOV_TYPES.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-                      stroke="var(--brown-mid)" strokeWidth="2"
-                      style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </div>
-                </div>
-                <button type="submit" className="cta-btn"
-                  style={{
-                    padding: '0.88rem 1.5rem',
-                    borderRadius: 12,
-                    border: 'none',
-                    background: 'linear-gradient(135deg, #C46B39 0%, #991B1B 100%)',
-                    color: 'var(--cream)',
-                    fontSize: '1rem', fontWeight: 600,
-                    cursor: 'pointer',
-                    letterSpacing: '0.03em',
-                    marginTop: '0.3rem',
-                    transition: 'opacity 0.2s, box-shadow 0.25s',
-                  }}>
-                  Отправить заявку
-                </button>
-              </form>
-            )}
+              )}
+
+              <div>
+                <label htmlFor="order-name" style={labelSt}>{t.mName}</label>
+                <input
+                  id="order-name"
+                  type="text"
+                  placeholder={t.mNamePh}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="plov-input"
+                  style={inputSt}
+                />
+              </div>
+
+              <button type="button" onClick={() => sendVia('wa')} className="cta-btn"
+                style={{
+                  padding: '0.88rem 1.5rem',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #2BB741 0%, #1B9E4B 100%)',
+                  color: '#fff',
+                  fontSize: '1rem', fontWeight: 700,
+                  cursor: 'pointer',
+                  letterSpacing: '0.02em',
+                  marginTop: '0.3rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  transition: 'opacity 0.2s, box-shadow 0.25s',
+                }}>
+                <WaIcon /> {t.mWa}
+              </button>
+
+              <button type="button" onClick={() => sendVia('tg')} className="cta-btn"
+                style={{
+                  padding: '0.88rem 1.5rem',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #34AADF 0%, #1F8FCB 100%)',
+                  color: '#fff',
+                  fontSize: '1rem', fontWeight: 700,
+                  cursor: 'pointer',
+                  letterSpacing: '0.02em',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  transition: 'opacity 0.2s, box-shadow 0.25s',
+                }}>
+                <TgIcon /> {t.mTg}
+              </button>
+
+              <p style={{ fontSize: '0.8rem', color: '#8B6F56', textAlign: 'center' }}>
+                {t.mNote}
+              </p>
+            </div>
           </motion.div>
           </div>
         </>
@@ -1974,7 +2212,8 @@ const inputSt = {
 //  HERO — letters, neon arch, holo tiles; melts away as you scroll
 // ═══════════════════════════════════════════════════════════════════════════
 
-function HeroSection({ onOrder }) {
+function HeroSection({ onOrder, lang }) {
+  const t = STRINGS[lang]
   const prefersReduced = useReducedMotion()
   const heroRef = useRef(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
@@ -2052,11 +2291,12 @@ function HeroSection({ onOrder }) {
             fontFamily: 'var(--font-body)',
           }}
         >
-          Из глубины веков — к вашему столу
+          {t.eyebrow}
         </motion.p>
 
         <motion.h1
-          aria-label="ПЛОВ"
+          key={lang}
+          aria-label={t.title}
           initial="hidden"
           animate="visible"
           variants={{
@@ -2075,7 +2315,7 @@ function HeroSection({ onOrder }) {
             justifyContent: 'center',
           }}
         >
-          {'ПЛОВ'.split('').map((ch, i) => (
+          {t.title.split('').map((ch, i) => (
             <motion.span
               key={i}
               aria-hidden="true"
@@ -2109,7 +2349,7 @@ function HeroSection({ onOrder }) {
             marginBottom: '2.2rem', lineHeight: 1.45,
           }}
         >
-          Казанный, с дымком — рецепт IX века, доставка из будущего
+          {t.tagline}
         </motion.p>
 
         <motion.div
@@ -2153,7 +2393,7 @@ function HeroSection({ onOrder }) {
               transition: 'box-shadow 0.28s',
             }}
           >
-            Заказать плов
+            {t.cta}
           </motion.button>
         </motion.div>
       </motion.div>
@@ -2172,7 +2412,7 @@ function HeroSection({ onOrder }) {
           pointerEvents: 'none',
         }}
       >
-        <span>Листать вниз</span>
+        <span>{t.scrollHint}</span>
         <motion.div
           animate={prefersReduced ? {} : { y: [0, 6, 0] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
@@ -2184,6 +2424,47 @@ function HeroSection({ onOrder }) {
         </motion.div>
       </motion.div>
     </section>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  LANGUAGE TOGGLE — РУС / ENG pill pinned to the top-right corner
+// ═══════════════════════════════════════════════════════════════════════════
+
+function LangToggle({ lang, setLang }) {
+  return (
+    <div style={{
+      position: 'fixed', top: 12, right: 14,
+      zIndex: 45,
+      display: 'flex', gap: 2, padding: 3,
+      borderRadius: 99,
+      background: 'rgba(12,8,28,0.78)',
+      border: '1px solid rgba(212,175,55,0.3)',
+    }}>
+      {[['en', 'ENG'], ['ru', 'РУС']].map(([code, label]) => (
+        <button
+          key={code}
+          onClick={() => setLang(code)}
+          aria-pressed={lang === code}
+          style={{
+            padding: '5px 12px',
+            borderRadius: 99,
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '0.72rem', fontWeight: 700,
+            letterSpacing: '0.08em',
+            fontFamily: 'var(--font-body)',
+            background: lang === code
+              ? 'linear-gradient(135deg, #F59E0B, #D4AF37)'
+              : 'transparent',
+            color: lang === code ? '#2D1505' : 'rgba(253,245,230,0.7)',
+            transition: 'background 0.2s, color 0.2s',
+          }}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -2229,7 +2510,7 @@ function BootSplash() {
             color: 'var(--gold)',
             letterSpacing: '0.18em', textTransform: 'uppercase',
           }}>
-            Плов Хаус
+            Plov House
           </p>
           <div style={{
             marginTop: 18, width: 130, height: 2, borderRadius: 2,
@@ -2258,7 +2539,16 @@ function BootSplash() {
 export default function App() {
   const [modalOpen, setModalOpen]   = useState(false)
   const [defaultPlov, setDefaultPlov] = useState('')
+  const [lang, setLang] = useState(INITIAL_LANG)
   const prefersReduced = useReducedMotion()
+  const t = STRINGS[lang]
+
+  // Keep the document in sync with the chosen language.
+  useEffect(() => {
+    document.documentElement.lang = lang
+    document.title = STRINGS[lang].docTitle
+    try { localStorage.setItem('plov-lang', lang) } catch { /* private mode */ }
+  }, [lang])
 
   const openOrder = useCallback((plovId = '') => {
     // Tiny haptic tick on phones that support it
@@ -2286,13 +2576,15 @@ export default function App() {
       <ScrollProgress />
       <EdgeGlow />
       <TapRipples />
+      <LangToggle lang={lang} setLang={setLang} />
       <OrderModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         defaultPlov={defaultPlov}
+        lang={lang}
       />
 
-      <HeroSection onOrder={openOrder} />
+      <HeroSection onOrder={openOrder} lang={lang} />
 
       <IkatDivider />
 
@@ -2306,8 +2598,8 @@ export default function App() {
           zIndex: 'var(--z-content)',
         }}
       >
-        <SectionTitle sub="Каждый рецепт хранит вековые секреты узбекской кухни">
-          Виды плова
+        <SectionTitle sub={t.menuSub}>
+          {t.menuTitle}
         </SectionTitle>
 
         <div style={{
@@ -2319,7 +2611,7 @@ export default function App() {
           perspective: 1200,
         }}>
           {PLOV_TYPES.map((plov, i) => (
-            <PlovCard key={plov.id} plov={plov} index={i} onOrder={openOrder} />
+            <PlovCard key={plov.id} plov={plov} index={i} onOrder={openOrder} lang={lang} />
           ))}
         </div>
       </section>
@@ -2327,9 +2619,9 @@ export default function App() {
       <IkatDivider />
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━ JOURNEY THROUGH THE CENTURIES ━━ */}
-      <JourneySection />
+      <JourneySection lang={lang} />
 
-      <StatsStrip />
+      <StatsStrip lang={lang} />
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ HOW TO ORDER ━━ */}
       <section
@@ -2341,8 +2633,8 @@ export default function App() {
           zIndex: 'var(--z-content)',
         }}
       >
-        <SectionTitle sub="Три простых шага до горячего плова">
-          Как заказать
+        <SectionTitle sub={t.servicesSub}>
+          {t.servicesTitle}
         </SectionTitle>
 
         <div ref={stepsRef}
@@ -2353,7 +2645,7 @@ export default function App() {
             maxWidth: 920, margin: '0 auto',
           }}
         >
-          {STEPS.map((step, i) => (
+          {SERVICES.map((step, i) => (
             <motion.div key={step.num}
               initial={{ opacity: 0, y: 38 }}
               animate={stepsInView ? { opacity: 1, y: 0 } : {}}
@@ -2388,7 +2680,7 @@ export default function App() {
                 color: 'var(--gold)', letterSpacing: '0.08em',
                 textTransform: 'uppercase', marginBottom: '0.4rem',
               }}>
-                Шаг {step.num}
+                {step.num}
               </div>
 
               <h3 style={{
@@ -2397,14 +2689,14 @@ export default function App() {
                 color: 'var(--cream)',
                 marginBottom: '0.65rem',
               }}>
-                {step.title}
+                {step.title[lang]}
               </h3>
 
               <p style={{
                 fontSize: '0.9rem', color: 'rgba(253,245,230,0.68)',
                 lineHeight: 1.65,
               }}>
-                {step.desc}
+                {step.desc[lang]}
               </p>
             </motion.div>
           ))}
@@ -2429,7 +2721,7 @@ export default function App() {
               transition: 'box-shadow 0.28s',
             }}
           >
-            Заказать сейчас
+            {t.ctaNow}
           </motion.button>
         </div>
       </section>
@@ -2505,8 +2797,7 @@ export default function App() {
               lineHeight: 1.45,
               marginBottom: '1.6rem',
             }}>
-              «Плов — это не просто еда.<br />
-              Это ритуал, собирающий людей вместе»
+              {t.quote}
             </p>
           </motion.blockquote>
 
@@ -2526,11 +2817,7 @@ export default function App() {
               lineHeight: 1.78, fontFamily: 'var(--font-body)',
               maxWidth: 660, margin: '0 auto',
             }}>
-              Узбекский плов известен с IX века. Великий врач Авиценна упоминал его
-              как «пищу, укрепляющую тело и дух». Традиционно плов готовят мужчины
-              в большом чугунном казане на открытом огне — для свадеб, праздников
-              и просто ради встречи с близкими. Мы сохранили эту традицию,
-              чтобы доставить её прямо к вашему столу.
+              {t.traditionText}
             </p>
           </motion.div>
         </div>
@@ -2561,40 +2848,44 @@ export default function App() {
               color: 'var(--gold)', fontSize: '1.7rem',
               fontWeight: 700, marginBottom: '0.4rem',
             }}>
-              Плов Хаус
+              Plov House
             </h2>
             <p style={{ color: 'rgba(253,245,230,0.55)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-              Настоящий узбекский плов<br />с доставкой по Ташкенту
+              {t.footerBrandSub}
             </p>
           </div>
 
           <div>
-            <h3 style={footerHeadSt}>Контакты</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <a href="tel:+998901234567" style={footerLinkSt}>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  style={{ flexShrink: 0 }}>
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 3.07 9.8 19.79 19.79 0 0 1 .01 1.18 2 2 0 0 1 2 0h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L6.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                +998 90 123-45-67
+            <h3 style={footerHeadSt}>{t.contactsHead}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <a href={waUrl('')} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+                <span style={{ color: '#25D366', display: 'inline-flex', flexShrink: 0 }}><WaIcon size={15} /></span>
+                WhatsApp · +971 52 611 34 77
               </a>
-              <a href="mailto:plov@house.uz" style={footerLinkSt}>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  style={{ flexShrink: 0 }}>
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
-                plov@house.uz
+              <a href={tgUrl('')} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+                <span style={{ color: '#34AADF', display: 'inline-flex', flexShrink: 0 }}><TgIcon size={15} /></span>
+                Telegram · @{TG_USER}
               </a>
             </div>
+            <h3 style={{ ...footerHeadSt, marginTop: '1.2rem' }}>{t.whereHead}</h3>
+            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ flexShrink: 0 }}>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {t.whereName}
+            </a>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(253,245,230,0.45)', marginTop: 4, paddingLeft: 22 }}>
+              {t.whereArea}
+            </p>
           </div>
 
           <div>
-            <h3 style={footerHeadSt}>Доставка</h3>
+            <h3 style={footerHeadSt}>{t.infoHead}</h3>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {['Весь Ташкент', 'В течение 60 минут', 'Ежедневно 10:00–22:00'].map(text => (
+              {t.infoLines.map(text => (
                 <li key={text} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem',
                   fontSize: '0.9rem', color: 'rgba(253,245,230,0.68)' }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%',
@@ -2606,7 +2897,7 @@ export default function App() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h3 style={footerHeadSt}>Заказать</h3>
+            <h3 style={footerHeadSt}>{t.orderHead}</h3>
             <button
               onClick={() => openOrder()}
               className="cta-btn"
@@ -2623,10 +2914,10 @@ export default function App() {
                 transition: 'box-shadow 0.28s',
               }}
             >
-              Оформить заказ
+              {t.orderBtn}
             </button>
             <p style={{ fontSize: '0.8rem', color: 'rgba(253,245,230,0.38)' }}>
-              Минимальный заказ 3 кг
+              {t.orderNote}
             </p>
           </div>
         </div>
@@ -2641,10 +2932,10 @@ export default function App() {
           flexWrap: 'wrap', gap: '0.5rem',
         }}>
           <p style={{ color: 'rgba(253,245,230,0.28)', fontSize: '0.82rem' }}>
-            © 2026 Плов Хаус. Все права защищены.
+            {t.copyright}
           </p>
           <p style={{ color: 'rgba(253,245,230,0.28)', fontSize: '0.82rem' }}>
-            Ташкент, Узбекистан · IX век — 2077
+            {t.location}
           </p>
         </div>
       </footer>
