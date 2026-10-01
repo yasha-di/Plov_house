@@ -752,7 +752,7 @@ const STRINGS = {
     mTg: 'Order in Telegram',
     mNote: 'We reply within minutes',
     msg: {
-      hello: 'Hello! I would like to order plov.',
+      hello: 'Hi there, I want plov!',
       type: 'Plov',
       format: 'Format',
       qty: 'Quantity',
@@ -809,7 +809,7 @@ const STRINGS = {
     mTg: 'Заказать в Telegram',
     mNote: 'Отвечаем в течение нескольких минут',
     msg: {
-      hello: 'Здравствуйте! Хочу заказать плов.',
+      hello: 'Привет, хочу плов!',
       type: 'Плов',
       format: 'Формат',
       qty: 'Количество',
@@ -3314,11 +3314,11 @@ export default function App() {
           <div>
             <h3 style={footerHeadSt}>{t.contactsHead}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <a href={waUrl('')} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+              <a href={waUrl(t.msg.hello)} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
                 <span style={{ color: '#25D366', display: 'inline-flex', flexShrink: 0 }}><WaIcon size={15} /></span>
                 WhatsApp · +971 52 611 34 77
               </a>
-              <a href={tgUrl('')} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+              <a href={tgUrl(t.msg.hello)} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
                 <span style={{ color: '#34AADF', display: 'inline-flex', flexShrink: 0 }}><TgIcon size={15} /></span>
                 Telegram · @{TG_USER}
               </a>
