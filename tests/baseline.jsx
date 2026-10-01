@@ -3,15 +3,14 @@ import {
   motion,
   AnimatePresence,
   useInView,
+  useReducedMotion,
   useScroll,
   useTransform,
   useSpring,
   useMotionValue,
   useVelocity,
 } from 'motion/react'
-import './App.css'
-import { useReducedMotion } from './useReducedMotion'
-import { readLanguage, isValidQuantity } from './preferences.mjs'
+import '../src/App.css'
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  ADRAS / ATLAS GEOMETRY — stepped "bodom" diamonds, the signature ikat motif
@@ -202,13 +201,12 @@ function TapRipples() {
 // Depth comes from sizeScale (bigger background tiles), NOT from a transform
 // scale — scaled wrappers ballooned GPU layer memory and caused black-screen
 // flashes on macOS. Layer bounds stay as tight as the seamless loop allows.
-function DriftingPattern({ reverse = false, duration = 40, sizeScale = 1, opacity = 0.12 }) {
+function DriftingPattern({ reverse = false, duration = 40, sizeScale = 1, blur = 3, opacity = 0.12 }) {
   const prefersReduced = useReducedMotion()
   const w = Math.round(TILE_W * sizeScale)
   const h = Math.round(TILE_H * sizeScale)
   return (
-    <div
-      className="ambient-motion fabric-drift"
+    <motion.div
       style={{
         position: 'absolute',
         // Horizontal margins must fit the one-tile x-loop; vertically the
@@ -217,12 +215,14 @@ function DriftingPattern({ reverse = false, duration = 40, sizeScale = 1, opacit
         top: -140, bottom: -140, left: -w, right: -w,
         backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
         backgroundSize: `24px 24px, 6px 6px, ${w}px ${h}px`,
+        // Static filter — rasterised once, then the layer only *moves*
+        // (transform-only animation = GPU compositing, no repaints).
+        filter: `blur(${blur}px) saturate(1.25)`,
         opacity,
         willChange: 'transform',
-        '--drift-end': `${reverse ? w : -w}px`,
-        animationDuration: `${duration}s`,
-        animationName: prefersReduced ? 'none' : 'fabric-drift',
       }}
+      animate={prefersReduced ? {} : { x: reverse ? [-w, 0] : [0, -w] }}
+      transition={{ x: { duration, repeat: Infinity, ease: 'linear' } }}
     />
   )
 }
@@ -245,8 +245,7 @@ function Stars() {
   return (
     <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       {list.map((s) => (
-        <div
-          className="ambient-motion star-twinkle"
+        <motion.div
           key={s.id}
           style={{
             position: 'absolute',
@@ -256,20 +255,19 @@ function Stars() {
             background: s.gold ? 'rgba(251,191,36,0.9)' : 'rgba(195,235,255,0.85)',
             boxShadow: s.gold ? '0 0 6px rgba(251,191,36,0.8)' : '0 0 6px rgba(140,220,255,0.7)',
             opacity: 0.3,
-            animationDuration: `${s.dur}s`,
-            animationDelay: `${s.delay}s`,
-            animationName: prefersReduced ? 'none' : 'star-twinkle',
           }}
+          animate={prefersReduced ? {} : { opacity: [0.12, 0.85, 0.12] }}
+          transition={{ duration: s.dur, delay: s.delay, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
     </div>
   )
 }
 
-// The torch: a vivid circle of the fabric follows the desktop cursor.
-// The outer disc moves with the pointer while the inner fabric moves the
-// opposite way, so the pattern stays pinned to the background and the light
-// "reveals" it. Both are transform-only, batched into one rAF per frame.
+// Torch that follows the pointer/finger. A circular window (static soft mask,
+// rasterised once) is moved with transform; the fabric inside is counter-
+// translated so it stays screen-aligned. Both ops are pure GPU compositing —
+// zero repaints per mouse move, perfectly glued to the cursor.
 function TorchReveal() {
   const outerRef = useRef(null)
   const innerRef = useRef(null)
@@ -291,9 +289,15 @@ function TorchReveal() {
       if (!raf) raf = requestAnimationFrame(apply)
     }
     const onMove = (e) => schedule(e.clientX, e.clientY)
+    const onTouch = (e) => {
+      const t = e.touches[0]
+      if (t) schedule(t.clientX, t.clientY)
+    }
     window.addEventListener('pointermove', onMove, { passive: true })
+    window.addEventListener('touchmove', onTouch, { passive: true })
     return () => {
       window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('touchmove', onTouch)
       if (raf) cancelAnimationFrame(raf)
     }
   }, [])
@@ -316,6 +320,8 @@ function TorchReveal() {
       <div
         ref={innerRef}
         style={{
+          // 260px overscan on every side so the torch circle stays filled
+          // right up to the screen edges (incl. mobile URL-bar resizes).
           position: 'absolute', left: -260, top: -260,
           width: 'calc(100vw + 520px)', height: 'calc(100vh + 520px)',
           backgroundImage: `${IKAT_FEATHER}, ${IKAT_WARP}, ${IKAT_TILE}`,
@@ -383,15 +389,17 @@ function IkatBackground() {
     >
       <Stars />
 
-      {/* One transform-only fabric layer; phone tilt adds a small parallax. */}
-      <motion.div style={{ position: 'absolute', inset: 0, y: prefersReduced || IS_LITE ? 0 : yShift, x: prefersReduced || IS_LITE ? 0 : xShift }}>
+      {/* Two fabric layers drifting in opposite directions = woven depth
+          (one layer in lite mode). On phones the gyroscope adds a silk-sway. */}
+      <motion.div style={{ position: 'absolute', inset: 0, y: prefersReduced ? 0 : yShift, x: prefersReduced ? 0 : xShift }}>
         <motion.div style={{ position: 'absolute', inset: 0, x: coarse ? tiltX : 0, y: coarse ? tiltY : 0 }}>
-          <DriftingPattern duration={64} opacity={0.19} />
+          <DriftingPattern duration={46} blur={2.5} opacity={0.13} />
+          {!IS_LITE && <DriftingPattern duration={64} blur={1} opacity={0.1} sizeScale={1.45} reverse />}
         </motion.div>
       </motion.div>
 
       {/* Sharp vivid fabric revealed under the cursor / finger */}
-      {!prefersReduced && !coarse && <TorchReveal />}
+      {!prefersReduced && <TorchReveal />}
 
       {/* Holographic scanlines + travelling scan sweep — the "future" layer */}
       <div
@@ -483,8 +491,31 @@ function kunguraPath(x0, x1, yBase, h = 11, tooth = 16) {
 // faintly visible (ghost stroke) and the light draws over it. Glow is faked
 // with a wide translucent under-stroke — no drop-shadow filters, which were
 // the main FPS killer.
-function TracePath({ d, stroke, width = 2 }) {
-  return <path d={d} stroke={stroke} strokeWidth={width} opacity={0.35} fill="none" strokeLinejoin="round" />
+function TracePath({ d, stroke, width = 2, seg = 0.14, duration = 4, delay = 0, reverse = false, still = false }) {
+  const prefersReduced = useReducedMotion()
+  if (prefersReduced || still) {
+    return <path d={d} stroke={stroke} strokeWidth={width} opacity={0.2} fill="none" strokeLinejoin="round" />
+  }
+  const shared = {
+    d,
+    pathLength: 1,
+    fill: 'none',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    strokeDasharray: `${seg} ${1 - seg}`,
+    initial: { strokeDashoffset: 0 },
+    animate: { strokeDashoffset: reverse ? 1 : -1 },
+    transition: { duration, delay, repeat: Infinity, ease: 'linear' },
+  }
+  return (
+    <>
+      {/* ghost ornament — always faintly visible so the pattern reads */}
+      <path d={d} stroke={stroke} strokeWidth={width * 0.8} strokeOpacity="0.14" fill="none" strokeLinejoin="round" />
+      {/* bright racing core — single animated stroke per path keeps the
+          per-frame SVG update count low (this loop runs forever) */}
+      <motion.path {...shared} stroke={stroke} strokeWidth={width * 1.3} strokeOpacity={0.95} />
+    </>
+  )
 }
 
 function Skyline() {
@@ -514,7 +545,7 @@ function Skyline() {
           position: 'absolute', bottom: -8, left: 0,
           width: '100%', height: '70%',
           opacity: 0.85,
-            y: prefersReduced || IS_LITE ? 0 : yFar,
+          y: prefersReduced ? 0 : yFar,
         }}
       >
         <g fill="#1C1336">
@@ -701,7 +732,8 @@ const waUrl = (text) => `https://wa.me/${WA_PHONE}${text ? `?text=${encodeURICom
 const tgUrl = (text) => `https://t.me/${TG_USER}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 const MAPS_URL = 'https://maps.google.com/?q=Honey+Murena+Canggu+Bali'
 
-const INITIAL_LANG = readLanguage()
+const INITIAL_LANG =
+  (typeof localStorage !== 'undefined' && localStorage.getItem('plov-lang')) || 'en'
 
 const STRINGS = {
   en: {
@@ -1132,6 +1164,39 @@ function HeroSteam() {
   )
 }
 
+function CardSteam({ visible }) {
+  const prefersReduced = useReducedMotion()
+  if (prefersReduced || !visible) return null
+  return (
+    <div aria-hidden="true"
+      style={{
+        position: 'absolute',
+        bottom: '100%',
+        left: 0, right: 0,
+        height: 56,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+      }}
+    >
+      {[33, 50, 67].map((x, i) => (
+        <motion.div key={i}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: `${x}%`,
+            width: 8, height: 8,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.28)',
+            filter: 'blur(3px)',
+            transform: 'translateX(-50%)',
+          }}
+          animate={{ y: -50, opacity: [0, 0.65, 0], scale: [0.4, 1.3, 0.6] }}
+          transition={{ duration: 1.6, delay: i * 0.28, repeat: Infinity, ease: 'easeOut' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  ORNAMENTS — kazan, neon arch, floating holographic tiles, ikat divider
@@ -1623,187 +1688,150 @@ function SectionTitle({ children, sub }) {
 //  PLOV CARD — 3D tilt + steam + neon hover
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Steam curls above a card while it is "active" (hovered, or centred on phones).
-function CardSteam({ visible }) {
-  const prefersReduced = useReducedMotion()
-  if (prefersReduced || !visible) return null
-  return (
-    <div aria-hidden="true" style={{
-      position: 'absolute', bottom: '100%', left: 0, right: 0, height: 56,
-      pointerEvents: 'none', overflow: 'hidden',
-    }}>
-      {[33, 50, 67].map((x, i) => (
-        <motion.div key={i}
-          style={{
-            position: 'absolute', bottom: 0, left: `${x}%`,
-            width: 8, height: 8, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.28)', filter: 'blur(3px)',
-            transform: 'translateX(-50%)',
-          }}
-          animate={{ y: -50, opacity: [0, 0.65, 0], scale: [0.4, 1.3, 0.6] }}
-          transition={{ duration: 1.6, delay: i * 0.28, repeat: Infinity, ease: 'easeOut' }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// Menu card. The outer <Reveal> handles the one-time rise-in; the inner
-// .plov-tilt layer leans toward the cursor (3D tilt + lift). Pointer moves
-// write the transform straight to the DOM once per frame — no React renders,
-// no layout reads (the card rect is measured once on pointer-enter).
 function PlovCard({ plov, index, onOrder, lang }) {
+  const [hovered, setHovered] = useState(false)
   const prefersReduced = useReducedMotion()
   const coarse = useCoarsePointer()
-  const [hovered, setHovered] = useState(false)
-  const outerRef = useRef(null)
-  const tiltRef = useRef(null)
-  const rectRef = useRef(null)
-  const rafRef = useRef(0)
-  const posRef = useRef([0.5, 0.5])
-  // Phones have no hover: a card lights up while it crosses the screen middle.
-  const centered = useInView(outerRef, { margin: '-38% 0px -38% 0px' })
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-50px' })
+  // Phones have no hover — a card "lights up" while it crosses the middle
+  // band of the viewport instead (steam, neon border, the works).
+  const centered = useInView(ref, { margin: '-38% 0px -38% 0px' })
   const active = coarse ? centered : hovered
-  const canTilt = !prefersReduced && !coarse
 
-  const applyTilt = useCallback(() => {
-    rafRef.current = 0
-    const el = tiltRef.current
-    if (!el) return
-    const [px, py] = posRef.current
-    el.style.transform =
-      `perspective(900px) translate3d(0,-8px,0) rotateX(${((0.5 - py) * 12).toFixed(2)}deg) rotateY(${((px - 0.5) * 12).toFixed(2)}deg)`
-  }, [])
-
-  const onEnter = useCallback(() => {
-    setHovered(true)
-    if (tiltRef.current) rectRef.current = tiltRef.current.getBoundingClientRect()
-  }, [])
+  // Pointer-tracking 3D tilt
+  const px = useMotionValue(0.5)
+  const py = useMotionValue(0.5)
+  const rotateX = useSpring(useTransform(py, [0, 1], [6, -6]), { stiffness: 220, damping: 20 })
+  const rotateY = useSpring(useTransform(px, [0, 1], [-6, 6]), { stiffness: 220, damping: 20 })
 
   const onMove = useCallback((e) => {
-    const r = rectRef.current
-    if (!r) return
-    posRef.current = [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]
-    if (!rafRef.current) rafRef.current = requestAnimationFrame(applyTilt)
-  }, [applyTilt])
+    const r = e.currentTarget.getBoundingClientRect()
+    px.set((e.clientX - r.left) / r.width)
+    py.set((e.clientY - r.top) / r.height)
+  }, [px, py])
 
   const onLeave = useCallback(() => {
+    px.set(0.5)
+    py.set(0.5)
     setHovered(false)
-    rectRef.current = null
-    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0 }
-    if (tiltRef.current) tiltRef.current.style.transform = ''
-  }, [])
-
-  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
+  }, [px, py])
 
   return (
-    <Reveal
-      as="article"
-      ref={outerRef}
+    <motion.article
+      ref={ref}
       className="plov-card"
-      delay={index * 70}
-      style={{ position: 'relative', display: 'flex' }}
+      initial={{ opacity: 0, y: 48 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      whileHover={prefersReduced ? {} : { y: -8 }}
+      transition={{
+        duration: prefersReduced ? 0 : 0.55,
+        delay:    prefersReduced ? 0 : index * 0.11,
+        ease: 'easeOut',
+      }}
+      onPointerMove={prefersReduced ? undefined : onMove}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={onLeave}
+      style={{
+        position: 'relative',
+        // Fully painted ikat ceramic, like the era cards — each plov gets
+        // its own colourway from the shared palette.
+        backgroundColor: PLOV_TILES[plov.id].field,
+        backgroundImage: PLOV_TILES[plov.id].uri,
+        backgroundSize: '240px 300px',
+        borderRadius: 18,
+        padding: 11,
+        boxShadow: active
+          ? '0 22px 60px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(246,239,226,0.5), 0 0 34px rgba(34,211,238,0.22)'
+          : '0 6px 26px rgba(0,0,0,0.38), inset 0 0 0 2px rgba(246,239,226,0.28)',
+        overflow: 'visible',
+        display: 'flex',
+        flexDirection: 'column',
+        rotateX: prefersReduced ? 0 : rotateX,
+        rotateY: prefersReduced ? 0 : rotateY,
+        transformPerspective: 900,
+      }}
     >
-      <div
-        ref={tiltRef}
-        className={`plov-tilt${active ? ' is-active' : ''}`}
-        onPointerEnter={canTilt ? onEnter : undefined}
-        onPointerMove={canTilt ? onMove : undefined}
-        onPointerLeave={canTilt ? onLeave : undefined}
+      <CardSteam visible={active} />
+
+      {/* lacquer gloss over the painting */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, borderRadius: 18, pointerEvents: 'none',
+        background:
+          'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 24%, transparent 44%, rgba(20,9,26,0.16) 100%)',
+      }} />
+
+      {/* carved ink medallion holding the text */}
+      <div style={{
+        position: 'relative',
+        flexGrow: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 12,
+        background: 'rgba(16,8,24,0.87)',
+        boxShadow: 'inset 0 0 0 1.5px rgba(246,239,226,0.3), 0 4px 18px rgba(0,0,0,0.4)',
+        padding: '1.35rem 1.25rem 1.25rem',
+      }}>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+        <span style={{
+          fontSize: '0.68rem', fontWeight: 700,
+          textTransform: 'uppercase', letterSpacing: '0.09em',
+          color: plov.accentLight,
+          background: `${plov.accentLight}1F`,
+          padding: '3px 10px', borderRadius: 99,
+        }}>
+          {plov.tag[lang]}
+        </span>
+        <span style={{ fontSize: '0.78rem', color: 'var(--text-faint)', fontWeight: 500 }}>
+          {STRINGS[lang].perPortion}
+        </span>
+      </div>
+
+      <h3 style={{
+        fontFamily: 'var(--font-heading)',
+        fontSize: '1.32rem', fontWeight: 700,
+        color: 'var(--text)',
+        marginBottom: '0.55rem',
+      }}>
+        {plov.name[lang]}
+      </h3>
+
+      <p style={{
+        fontSize: '0.91rem', lineHeight: 1.68,
+        color: 'var(--text-soft)', flexGrow: 1,
+        marginBottom: '1.25rem',
+      }}>
+        {plov.desc[lang]}
+      </p>
+
+      <button
+        onClick={() => onOrder(plov.id)}
         style={{
-          position: 'relative',
-          flexGrow: 1,
-          // Fully painted ikat ceramic — each plov gets its own colourway.
-          backgroundColor: PLOV_TILES[plov.id].field,
-          backgroundImage: PLOV_TILES[plov.id].uri,
-          backgroundSize: '240px 300px',
-          borderRadius: 18,
-          padding: 11,
-          display: 'flex',
-          flexDirection: 'column',
+          padding: '0.6rem 1.2rem',
+          borderRadius: 10,
+          border: `1.5px solid ${plov.accentLight}`,
+          background: 'transparent',
+          color: plov.accentLight,
+          fontSize: '0.88rem', fontWeight: 600,
+          cursor: 'pointer',
+          letterSpacing: '0.03em',
+          transition: 'background 0.2s, color 0.2s',
+          alignSelf: 'flex-start',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = plov.accentLight
+          e.currentTarget.style.color = '#1A120B'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = plov.accentLight
         }}
       >
-        <CardSteam visible={active} />
-
-        {/* lacquer gloss over the painting */}
-        <div aria-hidden="true" style={{
-          position: 'absolute', inset: 0, borderRadius: 18, pointerEvents: 'none',
-          background:
-            'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 24%, transparent 44%, rgba(20,9,26,0.16) 100%)',
-        }} />
-
-        {/* carved ink medallion holding the text */}
-        <div style={{
-          position: 'relative',
-          flexGrow: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          borderRadius: 12,
-          background: 'rgba(16,8,24,0.87)',
-          boxShadow: 'inset 0 0 0 1.5px rgba(246,239,226,0.3), 0 4px 18px rgba(0,0,0,0.4)',
-          padding: '1.35rem 1.25rem 1.25rem',
-        }}>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-          <span style={{
-            fontSize: '0.68rem', fontWeight: 700,
-            textTransform: 'uppercase', letterSpacing: '0.09em',
-            color: plov.accentLight,
-            background: `${plov.accentLight}1F`,
-            padding: '3px 10px', borderRadius: 99,
-          }}>
-            {plov.tag[lang]}
-          </span>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-faint)', fontWeight: 500 }}>
-            {STRINGS[lang].perPortion}
-          </span>
-        </div>
-
-        <h3 style={{
-          fontFamily: 'var(--font-heading)',
-          fontSize: '1.32rem', fontWeight: 700,
-          color: 'var(--text)',
-          marginBottom: '0.55rem',
-        }}>
-          {plov.name[lang]}
-        </h3>
-
-        <p style={{
-          fontSize: '0.91rem', lineHeight: 1.68,
-          color: 'var(--text-soft)', flexGrow: 1,
-          marginBottom: '1.25rem',
-        }}>
-          {plov.desc[lang]}
-        </p>
-
-        <button
-          onClick={() => onOrder(plov.id)}
-          style={{
-            padding: '0.6rem 1.2rem',
-            borderRadius: 10,
-            border: `1.5px solid ${plov.accentLight}`,
-            background: 'transparent',
-            color: plov.accentLight,
-            fontSize: '0.88rem', fontWeight: 600,
-            cursor: 'pointer',
-            letterSpacing: '0.03em',
-            transition: 'background 0.2s, color 0.2s',
-            alignSelf: 'flex-start',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = plov.accentLight
-            e.currentTarget.style.color = '#1A120B'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = plov.accentLight
-          }}
-        >
-          {STRINGS[lang].orderThis}
-        </button>
-        </div>
+        {STRINGS[lang].orderThis}
+      </button>
       </div>
-    </Reveal>
+    </motion.article>
   )
 }
 
@@ -1889,94 +1917,6 @@ function FeatherTrio({ accent, size = 44, opacity = 1 }) {
   )
 }
 
-// The painted ceramic era card on its own — used both in the scroll stack
-// (where only this card moves, keeping GPU layers small) and in the panel.
-function EraCard({ era, lang }) {
-  return (
-    <div style={{
-      position: 'relative',
-      maxWidth: 560,
-      width: '100%',
-      textAlign: 'center',
-      overflow: 'hidden',
-      // The card IS the painted ceramic: full ikat artwork edge to edge.
-      backgroundColor: '#C8102E',
-      backgroundImage: CARD_TILE,
-      backgroundSize: '240px 300px',
-      borderRadius: 26,
-      padding: 'clamp(1.1rem, 2.6vw, 1.7rem)',
-      boxShadow:
-        `0 24px 70px rgba(0,0,0,0.55), 0 0 50px ${era.accent}24, ` +
-        'inset 0 0 0 2px rgba(246,239,226,0.3), inset 0 2px 0 rgba(255,255,255,0.2)',
-    }}>
-      {/* lacquer gloss over the painting */}
-      <div aria-hidden="true" style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background:
-          'linear-gradient(118deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.05) 24%, transparent 42%, rgba(20,9,26,0.18) 100%)',
-      }} />
-
-      {/* carved ink medallion that keeps the text readable on the artwork */}
-      <div style={{
-        position: 'relative',
-        borderRadius: 18,
-        background: 'rgba(16,8,24,0.86)',
-        boxShadow: 'inset 0 0 0 1.5px rgba(246,239,226,0.35), 0 6px 26px rgba(0,0,0,0.45)',
-        padding: 'clamp(1.5rem, 3.5vw, 2.2rem) clamp(1.3rem, 3vw, 2rem)',
-      }}>
-        {/* crowning flame-feather motif */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.9rem' }}>
-          <FeatherTrio accent={era.accent} size={44} />
-        </div>
-
-        {/* year chip — lacquered gold-to-accent pill */}
-        <p style={{ marginBottom: '0.9rem' }}>
-          <span style={{
-            display: 'inline-block',
-            padding: '4px 16px',
-            borderRadius: 99,
-            fontSize: '0.72rem', fontWeight: 800,
-            textTransform: 'uppercase', letterSpacing: '0.24em',
-            color: '#14091A',
-            background: `linear-gradient(90deg, ${era.accent} 0%, #FACC15 100%)`,
-            boxShadow: '0 2px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.35)',
-          }}>
-            {era.year[lang]}
-          </span>
-        </p>
-
-        <h3 style={{
-          fontFamily: 'var(--font-heading)',
-          fontSize: 'clamp(1.55rem, 3.8vw, 2.2rem)',
-          fontWeight: 700, color: '#F6EFE2',
-          lineHeight: 1.2,
-        }}>
-          {era.title[lang]}
-        </h3>
-
-        {/* ornament divider: line — bodom diamond — line */}
-        <div aria-hidden="true" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 10, margin: '0.85rem 0 1rem',
-        }}>
-          <span style={{ height: 1.5, width: 56, background: `linear-gradient(90deg, transparent, ${era.accent})` }} />
-          <svg width="11" height="11" viewBox="0 0 12 12">
-            <path d="M6 0 L12 6 L6 12 L0 6 Z" fill={era.accent} />
-          </svg>
-          <span style={{ height: 1.5, width: 56, background: `linear-gradient(270deg, transparent, ${era.accent})` }} />
-        </div>
-
-        <p style={{
-          fontSize: '0.95rem', lineHeight: 1.72,
-          color: 'rgba(246,239,226,0.78)',
-        }}>
-          {era.text[lang]}
-        </p>
-      </div>
-    </div>
-  )
-}
-
 function EraPanel({ era, lang, fill = true }) {
   return (
     <div
@@ -1987,9 +1927,7 @@ function EraPanel({ era, lang, fill = true }) {
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        padding: fill
-          ? 'clamp(4rem, 8vw, 6rem) clamp(1.25rem, 6vw, 4rem)'
-          : 'clamp(1.75rem, 4vw, 3rem) clamp(1.25rem, 6vw, 4rem)',
+        padding: 'clamp(4rem, 8vw, 6rem) clamp(1.25rem, 6vw, 4rem)',
       }}
     >
       {/* Giant year watermark */}
@@ -2018,92 +1956,216 @@ function EraPanel({ era, lang, fill = true }) {
         background: `radial-gradient(ellipse 55% 45% at 50% 55%, ${era.accent}14 0%, transparent 70%)`,
       }} />
 
-      <EraCard era={era} lang={lang} />
+      <div style={{
+        position: 'relative',
+        maxWidth: 560,
+        width: '100%',
+        textAlign: 'center',
+        overflow: 'hidden',
+        // The card IS the painted ceramic: full ikat artwork edge to edge.
+        backgroundColor: '#C8102E',
+        backgroundImage: CARD_TILE,
+        backgroundSize: '240px 300px',
+        borderRadius: 26,
+        padding: 'clamp(1.1rem, 2.6vw, 1.7rem)',
+        boxShadow:
+          `0 24px 70px rgba(0,0,0,0.55), 0 0 50px ${era.accent}24, ` +
+          'inset 0 0 0 2px rgba(246,239,226,0.3), inset 0 2px 0 rgba(255,255,255,0.2)',
+      }}>
+        {/* lacquer gloss over the painting */}
+        <div aria-hidden="true" style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background:
+            'linear-gradient(118deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.05) 24%, transparent 42%, rgba(20,9,26,0.18) 100%)',
+        }} />
+
+        {/* carved ink medallion that keeps the text readable on the artwork */}
+        <div style={{
+          position: 'relative',
+          borderRadius: 18,
+          background: 'rgba(16,8,24,0.86)',
+          boxShadow: 'inset 0 0 0 1.5px rgba(246,239,226,0.35), 0 6px 26px rgba(0,0,0,0.45)',
+          padding: 'clamp(1.5rem, 3.5vw, 2.2rem) clamp(1.3rem, 3vw, 2rem)',
+        }}>
+          {/* crowning flame-feather motif */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.9rem' }}>
+            <FeatherTrio accent={era.accent} size={44} />
+          </div>
+
+          {/* year chip — lacquered gold-to-accent pill */}
+          <p style={{ marginBottom: '0.9rem' }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 16px',
+              borderRadius: 99,
+              fontSize: '0.72rem', fontWeight: 800,
+              textTransform: 'uppercase', letterSpacing: '0.24em',
+              color: '#14091A',
+              background: `linear-gradient(90deg, ${era.accent} 0%, #FACC15 100%)`,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.35)',
+            }}>
+              {era.year[lang]}
+            </span>
+          </p>
+
+          <h3 style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: 'clamp(1.55rem, 3.8vw, 2.2rem)',
+            fontWeight: 700, color: '#F6EFE2',
+            lineHeight: 1.2,
+          }}>
+            {era.title[lang]}
+          </h3>
+
+          {/* ornament divider: line — bodom diamond — line */}
+          <div aria-hidden="true" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 10, margin: '0.85rem 0 1rem',
+          }}>
+            <span style={{ height: 1.5, width: 56, background: `linear-gradient(90deg, transparent, ${era.accent})` }} />
+            <svg width="11" height="11" viewBox="0 0 12 12">
+              <path d="M6 0 L12 6 L6 12 L0 6 Z" fill={era.accent} />
+            </svg>
+            <span style={{ height: 1.5, width: 56, background: `linear-gradient(270deg, transparent, ${era.accent})` }} />
+          </div>
+
+          <p style={{
+            fontSize: '0.95rem', lineHeight: 1.72,
+            color: 'rgba(246,239,226,0.78)',
+          }}>
+            {era.text[lang]}
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
 
+// Burst configs: one stable random set per era, generated at module load.
+// 18 rice grains + 6 lacquered ikat shards. Every particle follows REAL
+// projectile physics baked into keyframes: launch velocity, gravity pulling
+// it into a parabola, air drag slowing the spin and horizontal travel, and a
+// per-particle launch delay so the card crumbles in waves, not all at once.
+const SHARD_COLORS = ['#E11D48', '#FACC15', '#06B6D4', '#10B981', '#8B5CF6', '#F6EFE2']
 
-// ── Reveal ────────────────────────────────────────────────────────────────
-// A card rises into place once, the first time it scrolls into view. Only
-// opacity + transform animate (compositor-only), driven by a CSS transition;
-// nothing runs per scroll frame. Reduced motion shows cards immediately.
-function Reveal({ as: Tag = 'div', delay = 0, className = '', style, children, ref: outerRef, ...rest }) {
-  const innerRef = useRef(null)
-  const ref = outerRef ?? innerRef
-  const [shown, setShown] = useState(false)
+const GRAIN_SETS = ERAS.map(() => {
+  const make = (i, shard) => {
+    const side = Math.random() > 0.5 ? 1 : -1
+    // Impact-splash tuning: particles squirt out from UNDER the landing card
+    // (lower half), kick up sharply, then heavy gravity slams them back down.
+    const vx = side * (80 + Math.random() * 260) * (shard ? 0.8 : 1) // sideways squirt
+    const vy = -(120 + Math.random() * 240)                         // sharp up-kick
+    const G = 950 + Math.random() * 380                             // heavy gravity
+    const d0 = 0.01 + Math.random() * 0.14                          // tight launch waves
+    const spin = (Math.random() > 0.5 ? 1 : -1) * (240 + Math.random() * 420) * (shard ? 0.5 : 1)
+    const sx = (Math.random() - 0.5) * (shard ? 360 : 330)
+    const sy = 30 + Math.random() * 85                              // bottom edge of the card
+    // Sample the ballistic curve at 5 points after launch.
+    const S = [0.18, 0.38, 0.6, 0.8, 1]
+    const times = [0, d0, ...S.map((s) => d0 + (1 - d0) * s)]
+    const xK = [sx, sx], yK = [sy, sy], rK = [0, 0]
+    for (const s of S) {
+      xK.push(sx + vx * s * (1 - 0.22 * s))          // drag eats horizontal speed
+      yK.push(sy + vy * s + G * s * s)               // parabola: up, then gravity wins
+      rK.push(spin * s * (1.25 - 0.25 * s))          // tumbling slows down
+    }
+    return {
+      id: `${shard ? 's' : 'g'}${i}`,
+      shard,
+      times, xK, yK, rK,
+      oTimes: [0, d0, Math.min(d0 + 0.06, 0.98), 0.8, 1],
+      w: shard ? 11 + Math.random() * 7 : 5 + Math.random() * 3,
+      h: shard ? 16 + Math.random() * 9 : 11 + Math.random() * 5,
+      fill: shard
+        ? SHARD_COLORS[i % SHARD_COLORS.length]
+        : (Math.random() > 0.4 ? '#F5DEB3' : '#EED9A0'),
+    }
+  }
+  return [
+    ...Array.from({ length: 18 }, (_, i) => make(i, false)),
+    ...Array.from({ length: 6 }, (_, i) => make(i, true)),
+  ]
+})
 
-  useEffect(() => {
-    const el = ref.current
-    if (!el || shown) return undefined
-    const io = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { setShown(true); io.disconnect() }
-    }, { rootMargin: '0px 0px -10% 0px' })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [shown, ref])
-
+// A single particle scrubbed by the slide's exit progress: waits for its
+// launch wave, bursts out on a true gravity parabola, tumbles, fades.
+// Scroll back — the physics runs in reverse and the card reassembles.
+function FlyingGrain({ exitP, g }) {
+  const x = useTransform(exitP, g.times, g.xK)
+  const y = useTransform(exitP, g.times, g.yK)
+  const rotate = useTransform(exitP, g.times, g.rK)
+  const opacity = useTransform(exitP, g.oTimes, [0, 0, 1, 0.95, 0])
   return (
-    <Tag
-      ref={ref}
-      className={`reveal${shown ? ' is-in' : ''} ${className}`.trim()}
-      style={{ '--d': `${delay}ms`, ...style }}
-      {...rest}
-    >
-      {children}
-    </Tag>
+    <motion.div style={{
+      position: 'absolute', left: '50%', top: '50%',
+      x, y, rotate, opacity,
+      willChange: 'transform, opacity',
+    }}>
+      {g.shard ? (
+        <svg width={g.w} height={g.h} viewBox={`0 0 ${g.w} ${g.h}`} style={{ overflow: 'visible' }}>
+          <polygon
+            points={ptsStr(steppedDiamond(g.w / 2, g.h / 2, g.w / 2 - 1, g.h / 2 - 1, 4))}
+            fill={g.fill} stroke="rgba(10,5,16,0.7)" strokeWidth="1" />
+        </svg>
+      ) : (
+        <svg width={g.w} height={g.h} viewBox="0 0 6 13">
+          <ellipse cx="3" cy="6.5" rx="2.4" ry="6" fill={g.fill} />
+        </svg>
+      )}
+    </motion.div>
   )
 }
 
-// Slight resting tilt per era card — like plates laid out on a dastarkhan.
-const ERA_TILTS = [-1.2, 1.4, -1.5, 1.1]
-
-// Where each era card flies in from — fully off-screen, from a side or a
-// corner (viewport units, so it works on any screen) — and the slight tilt
-// it keeps once it lands, like plates stacked on a dastarkhan.
+// Per-era entry directions (in % of slide size, so any screen works) and the
+// slight resting tilt every card keeps — like plates stacked on a dastarkhan.
 const ERA_DIRS = [
-  { inX: 0,   inY: 95,  inRot: 8,   restRot: -1.6 },  // rises from the bottom
-  { inX: 80,  inY: 0,   inRot: 14,  restRot: 2 },     // from the right edge
-  { inX: -80, inY: 75,  inRot: -16, restRot: -2.3 },  // from the bottom-left corner
-  { inX: 75,  inY: -90, inRot: -12, restRot: 1.4 },   // from the top-right corner
+  { inX: 0,    inY: 0,    inRot: 0,   restRot: -1.6 },  // pre-laid
+  { inX: 125,  inY: 4,    inRot: 10,  restRot: 2 },     // slides in from the right
+  { inX: -125, inY: 6,    inRot: -10, restRot: -2.3 },  // from the left
+  { inX: 8,    inY: -135, inRot: -7,  restRot: 1.4 },   // drops from above
 ]
 
-// One card in the desktop STACK. Scrolling down, it flies in from off-screen
-// and lands on top of the previous card, which shrinks and darkens beneath.
-// Scrolling up plays the same timeline backwards: cards fly back out the way
-// they came, one by one. Perf: only the card-sized element moves, and cards
-// buried two deep are hidden entirely.
+// One era slide in a STACK: it slides in from its own side, decelerates and
+// LANDS on top of the previous card (which recedes and dims underneath —
+// no ghostly fades). On impact, rice splashes out from under the card.
+// Cards two layers deep get hidden — never more than 2 composited cards.
 function EraSlide({ era, index, total, progress, lang }) {
-  const F = 0.12                                   // length of one flight
-  const STEP = (1 - 2 * F) / Math.max(total - 1, 1) // spacing between landings
-  const land = (i) => F + i * STEP                  // 0.12, 0.38, 0.64, 0.90
+  const prefersReduced = useReducedMotion()
+  const f = 0.38 / total
+  const sI = index / total
   const d = ERA_DIRS[index % ERA_DIRS.length]
-  const e1 = land(index)
-  const e0 = Math.max(e1 - F, 0.001)
-  const e0m = e1 - 0.45 * F
+  const e0 = sI - f, e0m = sI - 0.45 * f, e1 = sI            // entry window
+  const c0 = (index + 1) / total - f, c1 = (index + 1) / total // covered by next
+  const b0 = (index + 2) / total - f                           // buried under two
+  const hasEntry = index > 0
   const hasCover = index < total - 1
   const hasBury = index < total - 2
-  const c0 = hasCover ? land(index + 1) - F : 0, c1 = hasCover ? land(index + 1) : 0
-  const b0 = hasBury ? land(index + 2) - F : 0
 
-  const vw = (v) => `${v}vw`
-  const vh = (v) => `${v}vh`
-  // Off-screen start → eased landing (75% of the path done by mid-flight).
-  const R   = [0, e0, e0m, e1]
-  const X   = [vw(d.inX), vw(d.inX), vw(d.inX * 0.25), vw(0)]
-  const Y   = [vh(d.inY), vh(d.inY), vh(d.inY * 0.25), vh(0)]
-  const ROT = [d.inRot, d.inRot, d.inRot * 0.25 + d.restRot * 0.75, d.restRot]
-  const SC  = [1, 1, 1, 1]
-  const DIM = [0, 0, 0, 0]
-  const OP  = [1, 1, 1, 1]
+  // Assemble full-range [0..1] keyframes (scroll-timeline safety) with an
+  // eased landing: 75% of the path is covered by the entry midpoint.
+  const pct = (v) => `${v}%`
+  const R = [0]
+  const X = [pct(hasEntry ? d.inX : 0)]
+  const Y = [pct(hasEntry ? d.inY : 0)]
+  const ROT = [hasEntry ? d.inRot : d.restRot]
+  const SC = [1]
+  const DIM = [0]
+  const OP = [1]
+  if (hasEntry) {
+    R.push(e0, e0m, e1)
+    X.push(pct(d.inX), pct(d.inX * 0.25), '0%')
+    Y.push(pct(d.inY), pct(d.inY * 0.25), '0%')
+    ROT.push(d.inRot, d.inRot * 0.25 + d.restRot * 0.75, d.restRot)
+    SC.push(1, 1, 1); DIM.push(0, 0, 0); OP.push(1, 1, 1)
+  }
   if (hasCover) {
     R.push(c0, c1)
-    X.push(vw(0), vw(0)); Y.push(vh(0), vh(0)); ROT.push(d.restRot, d.restRot)
+    X.push('0%', '0%'); Y.push('0%', '0%'); ROT.push(d.restRot, d.restRot)
     SC.push(1, 0.94); DIM.push(0, 0.45); OP.push(1, 1)
   }
   if (hasBury) {
     R.push(b0, b0 + 0.02)
-    X.push(vw(0), vw(0)); Y.push(vh(0), vh(0)); ROT.push(d.restRot, d.restRot)
+    X.push('0%', '0%'); Y.push('0%', '0%'); ROT.push(d.restRot, d.restRot)
     SC.push(0.94, 0.94); DIM.push(0.45, 0.5); OP.push(1, 0)
   }
   R.push(1)
@@ -2116,27 +2178,41 @@ function EraSlide({ era, index, total, progress, lang }) {
   const scale   = useTransform(progress, R, SC)
   const dim     = useTransform(progress, R, DIM)
   const opacity = useTransform(progress, R, OP)
+  // Buried cards are truly removed from compositing, whatever the timeline does.
   const visibility = useTransform(opacity, (v) => (v < 0.02 ? 'hidden' : 'visible'))
 
+  // Impact progress: rice splashes out from under the card AS IT LANDS.
+  const impactP = useTransform(
+    progress,
+    hasEntry
+      ? [0, Math.max(e1 - 0.012, 0.0001), Math.min(e1 + 0.105, 0.999), 1]
+      : [0, 0.0001, 0.0002, 1],
+    hasEntry ? [0, 0, 1, 1] : [0, 0, 0, 0],
+  )
+  const showGrains = hasEntry && !prefersReduced && !IS_LITE
+
   return (
-    <div style={{
-      position: 'absolute', inset: 0,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 'clamp(5rem, 9vh, 7rem) clamp(1.25rem, 6vw, 4rem)',
-      pointerEvents: 'none',
-      zIndex: index + 1,
-    }}>
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {/* Impact splash — rendered UNDER its own card, above the previous one */}
+      {showGrains && (
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0 }}>
+          {GRAIN_SETS[index].map((g) => (
+            <FlyingGrain key={g.id} exitP={impactP} g={g} />
+          ))}
+        </div>
+      )}
+
+      {/* The card itself — lands on the stack and stays */}
       <motion.div style={{
-        position: 'relative',
-        width: '100%', maxWidth: 560,
+        position: 'absolute', inset: 0,
         x, y, rotate, scale, opacity, visibility,
-        willChange: 'transform, opacity',
+        willChange: 'transform',
       }}>
-        <EraCard era={era} lang={lang} />
-        {/* darkening veil over a card once the next one lands on it */}
+        <EraPanel era={era} lang={lang} />
+        {/* dimming veil over cards that have been covered by the next one */}
         <motion.div aria-hidden="true" style={{
-          position: 'absolute', inset: 0, borderRadius: 26,
-          background: 'rgb(8,4,16)',
+          position: 'absolute', inset: 0,
+          background: 'rgba(8,4,16,1)',
           opacity: dim,
           pointerEvents: 'none',
         }} />
@@ -2147,25 +2223,18 @@ function EraSlide({ era, index, total, progress, lang }) {
 
 function JourneySection({ lang }) {
   const prefersReduced = useReducedMotion()
-  const coarse = useCoarsePointer()
   const t = STRINGS[lang]
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
 
-  // Phones and reduced motion: separate cards that rise in
-  // one by one as you scroll (natural page scrolling, no pinning).
-  if (prefersReduced || coarse) {
+  // Reduced motion: plain vertical stack, no scroll choreography.
+  if (prefersReduced) {
     return (
-      <section ref={ref} id="journey" style={{ position: 'relative', zIndex: 'var(--z-content)' }}>
+      <section id="journey" style={{ position: 'relative', zIndex: 'var(--z-content)' }}>
         <div style={{ padding: 'clamp(3rem, 8vw, 5rem) 0 0' }}>
           <SectionTitle sub={t.journeySub}>{t.journeyTitle}</SectionTitle>
         </div>
-        {ERAS.map((era, i) => (
-          <Reveal key={era.num} className="reveal-era"
-            style={{ '--tilt': `${ERA_TILTS[i % ERA_TILTS.length]}deg` }}>
-            <EraPanel era={era} lang={lang} fill={false} />
-          </Reveal>
-        ))}
+        {ERAS.map((era) => <EraPanel key={era.num} era={era} lang={lang} fill={false} />)}
       </section>
     )
   }
@@ -2180,7 +2249,12 @@ function JourneySection({ lang }) {
         zIndex: 'var(--z-content)',
       }}
     >
-      <div style={{ position: 'sticky', top: 0, height: '100svh', overflow: 'hidden' }}>
+      <div style={{
+        position: 'sticky', top: 0,
+        height: '100svh',
+        overflow: 'hidden',
+      }}>
+        {/* Era slides, stacked and crossfading */}
         {ERAS.map((era, i) => (
           <EraSlide key={era.num} era={era} index={i} total={ERAS.length}
             progress={scrollYProgress} lang={lang} />
@@ -2189,7 +2263,7 @@ function JourneySection({ lang }) {
         {/* Sticky section header */}
         <div style={{
           position: 'absolute', top: 'clamp(1.5rem, 4vh, 3rem)', left: 0, right: 0,
-          textAlign: 'center', zIndex: 10, pointerEvents: 'none',
+          textAlign: 'center', zIndex: 2, pointerEvents: 'none',
         }}>
           <p style={{
             fontSize: '0.72rem', fontWeight: 700,
@@ -2208,9 +2282,13 @@ function JourneySection({ lang }) {
           position: 'absolute', bottom: 'clamp(1.2rem, 4vh, 2.4rem)', left: '50%',
           transform: 'translateX(-50%)',
           width: 'min(70vw, 360px)',
-          zIndex: 10,
+          zIndex: 2,
         }}>
-          <div style={{ height: 2, borderRadius: 2, background: 'rgba(253,245,230,0.14)', overflow: 'hidden' }}>
+          <div style={{
+            height: 2, borderRadius: 2,
+            background: 'rgba(253,245,230,0.14)',
+            overflow: 'hidden',
+          }}>
             <motion.div style={{
               height: '100%',
               transformOrigin: 'left center',
@@ -2221,8 +2299,10 @@ function JourneySection({ lang }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
             {ERAS.map((era) => (
               <span key={era.num} style={{
-                fontSize: '0.62rem', fontWeight: 600, letterSpacing: '0.08em',
-                color: 'var(--text-faint)', textTransform: 'uppercase',
+                fontSize: '0.62rem', fontWeight: 600,
+                letterSpacing: '0.08em',
+                color: 'var(--text-faint)',
+                textTransform: 'uppercase',
               }}>
                 {era.year[lang]}
               </span>
@@ -2352,8 +2432,6 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
   const [name, setName] = useState('')
   const prefersReduced = useReducedMotion()
   const firstInputRef = useRef(null)
-  const dialogRef = useRef(null)
-  const quantityRef = useRef(null)
 
   // Pick up the pre-selected plov each time the modal opens — the sanctioned
   // "adjust state during render" pattern (no effect, no extra paint).
@@ -2364,39 +2442,17 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
   }
 
   useEffect(() => {
+    if (isOpen) {
+      const id = setTimeout(() => firstInputRef.current?.focus(), 50)
+      return () => clearTimeout(id)
+    }
+  }, [isOpen])
+
+  useEffect(() => {
     if (!isOpen) return
-    const trigger = document.activeElement
-    const overflow = document.body.style.overflow
-    const content = document.getElementById('page-content')
-    const wasInert = content?.inert
-    if (content) content.inert = true
-    document.body.style.overflow = 'hidden'
-    firstInputRef.current?.focus({ preventScroll: true })
-    const handler = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        onClose()
-      }
-      if (e.key !== 'Tab') return
-      const controls = [...dialogRef.current.querySelectorAll('button, input, select, [tabindex="0"]')]
-        .filter(el => !el.disabled && el.getClientRects().length)
-      const first = controls[0]
-      const last = controls[controls.length - 1]
-      if (e.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
-        e.preventDefault()
-        last?.focus()
-      } else if (!e.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) {
-        e.preventDefault()
-        first?.focus()
-      }
-    }
+    const handler = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handler)
-    return () => {
-      document.removeEventListener('keydown', handler)
-      document.body.style.overflow = overflow
-      if (content) content.inert = wasInert
-      if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus({ preventScroll: true })
-    }
+    return () => document.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
   const minQty = format === 'kazan' ? 3 : 1
@@ -2407,11 +2463,6 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
 
   // The order is finished in the messenger of choice with a pre-filled text.
   const sendVia = (kind) => {
-    if (!isValidQuantity(qty, format)) {
-      quantityRef.current?.reportValidity()
-      quantityRef.current?.focus()
-      return
-    }
     const p = PLOV_TYPES.find((x) => x.id === plov)
     const lines = [
       t.msg.hello,
@@ -2458,7 +2509,6 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
           >
           <motion.div
             role="dialog"
-            ref={dialogRef}
             aria-modal="true"
             aria-labelledby="modal-title"
             initial={{ opacity: 0, scale: 0.93, y: 16 }}
@@ -2562,12 +2612,10 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
                   </label>
                   <input
                     id="order-qty"
-                    ref={quantityRef}
-                    required
                     type="number"
                     min={minQty} max={100} step={1}
                     value={qty}
-                    onChange={e => setQty(e.target.value)}
+                    onChange={e => setQty(Math.max(minQty, Math.min(100, Number(e.target.value) || minQty)))}
                     className="plov-input"
                     style={inputSt}
                   />
@@ -3012,7 +3060,6 @@ export default function App() {
     setDefaultPlov(plovId)
     setModalOpen(true)
   }, [])
-  const closeOrder = useCallback(() => setModalOpen(false), [])
 
   const stepsRef = useRef(null)
   const stepsInView = useInView(stepsRef, { once: true, margin: '-60px' })
@@ -3033,14 +3080,14 @@ export default function App() {
       <ScrollProgress />
       <EdgeGlow />
       <TapRipples />
+      <LangToggle lang={lang} setLang={setLang} />
       <OrderModal
         isOpen={modalOpen}
-        onClose={closeOrder}
+        onClose={() => setModalOpen(false)}
         defaultPlov={defaultPlov}
         lang={lang}
       />
-      <div id="page-content">
-      <LangToggle lang={lang} setLang={setLang} />
+
       <HeroSection onOrder={openOrder} lang={lang} />
 
       <IkatDivider />
@@ -3053,6 +3100,10 @@ export default function App() {
           background: 'transparent',
           padding: 'clamp(3rem, 8vw, 6rem) clamp(1rem, 5vw, 3rem)',
           zIndex: 'var(--z-content)',
+          // Browser skips layout & paint entirely while the section is
+          // offscreen — big scroll-smoothness win, zero visual change.
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 900px',
         }}
       >
         <SectionTitle sub={t.menuSub}>
@@ -3065,6 +3116,7 @@ export default function App() {
           gap: '1.5rem',
           maxWidth: 1120, margin: '0 auto',
           position: 'relative', zIndex: 1,
+          perspective: 1200,
         }}>
           {PLOV_TYPES.map((plov, i) => (
             <PlovCard key={plov.id} plov={plov} index={i} onOrder={openOrder} lang={lang} />
@@ -3087,6 +3139,8 @@ export default function App() {
           padding: 'clamp(3rem, 8vw, 6rem) clamp(1rem, 5vw, 3rem)',
           position: 'relative',
           zIndex: 'var(--z-content)',
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 800px',
         }}
       >
         <SectionTitle sub={t.servicesSub}>
@@ -3193,6 +3247,8 @@ export default function App() {
           position: 'relative',
           zIndex: 'var(--z-content)',
           overflow: 'hidden',
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 700px',
         }}
       >
         {/* Slowly rotating ikat medallion behind the quote */}
@@ -3290,6 +3346,8 @@ export default function App() {
           padding: 'clamp(2.5rem, 7vw, 4.5rem) clamp(1rem, 5vw, 3rem)',
           position: 'relative',
           zIndex: 'var(--z-content)',
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 600px',
         }}
       >
         <div style={{
@@ -3395,7 +3453,6 @@ export default function App() {
           </p>
         </div>
       </footer>
-      </div>
     </>
   )
 }
@@ -3415,3 +3472,4 @@ const footerLinkSt = {
   fontSize: '0.9rem',
   transition: 'color 0.2s',
 }
+

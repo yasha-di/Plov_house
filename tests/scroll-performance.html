@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+  <body>
+    <div id="root"></div>
+    <output id="result" style="position:fixed;bottom:0;left:0;z-index:9999;background:white;color:black;padding:8px">Preparing scroll test</output>
+    <script type="module">
+      import React from 'react'
+      import { createRoot } from 'react-dom/client'
+      import '../src/index.css'
+      const baseline = new URLSearchParams(location.search).has('baseline')
+      const { default: App } = await import(baseline ? './baseline.jsx' : '../src/App.jsx')
+      createRoot(document.getElementById('root')).render(React.createElement(App))
+      const result = document.getElementById('result')
+      const frames = []
+      let previous, start
+      function frame(now) {
+        start ??= now
+        if (previous) frames.push(now - previous)
+        previous = now
+        const progress = Math.min((now - start) / 8000, 1)
+        const menu = document.getElementById('menu')
+        const target = menu.offsetTop + menu.offsetHeight + 800
+        window.scrollTo({ top: target * progress, behavior: 'instant' })
+        if (progress < 1) requestAnimationFrame(frame)
+        else {
+          const sorted = [...frames].sort((a,b) => a-b)
+          result.textContent = JSON.stringify({
+            version: baseline ? 'baseline' : 'updated', frames: frames.length,
+            meanMs: +(frames.reduce((a,b)=>a+b,0)/frames.length).toFixed(2),
+            p95Ms: +sorted[Math.floor(sorted.length * .95)].toFixed(2),
+            over50ms: frames.filter(n=>n>50).length,
+            width: innerWidth,
+          })
+        }
+      }
+      setTimeout(()=>requestAnimationFrame(frame), 2500)
+    </script>
+  </body>
+</html>

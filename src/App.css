@@ -11,7 +11,26 @@
   box-shadow: 0 12px 40px rgba(212, 175, 55, 0.55) !important;
 }
 
-/* Card hover — lift handled by motion whileHover; this only eases the glow */
-.plov-card {
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+/* Menu card: one-time rise-in (outer) + cursor tilt (inner .plov-tilt).
+   Only transform/opacity animate; the shadow is static per state. */
+.plov-card.reveal {
+  transition:
+    opacity 600ms ease var(--d, 0ms),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms);
+}
+
+.plov-tilt {
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.38), inset 0 0 0 2px rgba(246, 239, 226, 0.28);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 300ms ease;
+  will-change: transform;
+}
+.plov-tilt.is-active {
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 2px rgba(246, 239, 226, 0.5),
+    0 0 34px rgba(34, 211, 238, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plov-tilt { transition: none; }
 }
