@@ -699,7 +699,6 @@ const WA_PHONE = '971526113477'
 const TG_USER = 'maxarab9'
 const waUrl = (text) => `https://wa.me/${WA_PHONE}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 const tgUrl = (text) => `https://t.me/${TG_USER}${text ? `?text=${encodeURIComponent(text)}` : ''}`
-const MAPS_URL = 'https://maps.google.com/?q=Honey+Murena+Canggu+Bali'
 
 const INITIAL_LANG = readLanguage()
 
@@ -726,14 +725,14 @@ const STRINGS = {
     footerBrandSub: <>Real Uzbek plov<br />in Bali, Indonesia</>,
     contactsHead: 'Contacts',
     whereHead: 'Where',
-    whereName: 'Honey Murena · Canggu',
+    whereName: 'Honey Murena',
     whereArea: 'Bali, Indonesia',
     infoHead: 'Service',
-    infoLines: ['Canggu & nearby', 'Delivery · chef on-site', 'Daily 10:00 – 22:00'],
+    infoLines: ['Canggu & nearby', 'Delivery · chef on-site', 'Monday & Thursday'],
     orderHead: 'Order',
     orderBtn: 'Place an order',
     orderNote: 'Big kazan from 3 kg · chef on-site by booking',
-    copyright: '© 2026 Plov House · Honey Murena, Canggu',
+    copyright: '© 2026 Plov House · Honey Murena',
     location: 'Bali, Indonesia · IX century — 2077',
     mTitle: 'Order plov',
     mSub: 'Pick the options — we finish the order in chat',
@@ -783,14 +782,14 @@ const STRINGS = {
     footerBrandSub: <>Настоящий узбекский плов<br />на Бали, Индонезия</>,
     contactsHead: 'Контакты',
     whereHead: 'Где мы',
-    whereName: 'Honey Murena · Чангу',
+    whereName: 'Honey Murena',
     whereArea: 'Бали, Индонезия',
     infoHead: 'Сервис',
-    infoLines: ['Чангу и окрестности', 'Доставка · шеф на месте', 'Ежедневно 10:00 – 22:00'],
+    infoLines: ['Чангу и окрестности', 'Доставка · шеф на месте', 'Понедельник и четверг'],
     orderHead: 'Заказать',
     orderBtn: 'Оформить заказ',
     orderNote: 'Большой казан от 3 кг · шеф на месте по записи',
-    copyright: '© 2026 Plov House · Honey Murena, Чангу',
+    copyright: '© 2026 Plov House · Honey Murena',
     location: 'Бали, Индонезия · IX век — 2077',
     mTitle: 'Заказать плов',
     mSub: 'Выберите опции — заказ завершим в чате',
@@ -3324,7 +3323,7 @@ export default function App() {
               </a>
             </div>
             <h3 style={{ ...footerHeadSt, marginTop: '1.2rem' }}>{t.whereHead}</h3>
-            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+            <p style={footerLinkSt}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                 style={{ flexShrink: 0 }}>
@@ -3332,7 +3331,7 @@ export default function App() {
                 <circle cx="12" cy="10" r="3" />
               </svg>
               {t.whereName}
-            </a>
+            </p>
             <p style={{ fontSize: '0.82rem', color: 'rgba(253,245,230,0.45)', marginTop: 4, paddingLeft: 22 }}>
               {t.whereArea}
             </p>
