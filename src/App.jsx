@@ -696,12 +696,12 @@ function ScrollProgress() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const WA_PHONE = '971526113477'
-const TG_PHONE = '998881990461'
 const TG_PHONE_LABEL = '+998 88 199 04 61'
 const waUrl = (text) => `https://wa.me/${WA_PHONE}${text ? `?text=${encodeURIComponent(text)}` : ''}`
-// Telegram opens the contact by phone number. Phone links can't carry a
-// pre-filled message, so the order text is copied to the clipboard instead.
-const tgUrl = () => `https://t.me/+${TG_PHONE}`
+// Telegram links go to the username: it opens for everyone (no phone-privacy
+// setting involved) and supports a pre-filled message, like WhatsApp.
+const TG_USER = 'plovisthelove'
+const tgUrl = (text) => `https://t.me/${TG_USER}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 
 const INITIAL_LANG = readLanguage()
 
@@ -2436,8 +2436,7 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
     ]
     if (name.trim()) lines.push(`• ${t.msg.name}: ${name.trim()}`)
     const msg = lines.join('\n')
-    if (kind === 'tg') navigator.clipboard?.writeText(msg).catch(() => {})
-    window.open(kind === 'wa' ? waUrl(msg) : tgUrl(), '_blank', 'noopener,noreferrer')
+    window.open(kind === 'wa' ? waUrl(msg) : tgUrl(msg), '_blank', 'noopener,noreferrer')
     onClose()
   }
 
@@ -3367,7 +3366,7 @@ export default function App() {
                 <span style={{ color: '#25D366', display: 'inline-flex', flexShrink: 0 }}><WaIcon size={15} /></span>
                 WhatsApp · +971 52 611 34 77
               </a>
-              <a href={tgUrl()} target="_blank" rel="noopener noreferrer" className="footer-link" style={footerLinkSt}>
+              <a href={tgUrl(t.msg.hello)} target="_blank" rel="noopener noreferrer" className="footer-link" style={footerLinkSt}>
                 <span style={{ color: '#34AADF', display: 'inline-flex', flexShrink: 0 }}><TgIcon size={15} /></span>
                 Telegram · {TG_PHONE_LABEL}
               </a>
