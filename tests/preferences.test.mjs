@@ -6,29 +6,31 @@ import { getMotionPreference, subscribeMotionPreference } from '../src/motionPre
 test('language tolerates missing, blocked and invalid storage', () => {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
   try {
-    for (const [value, expected] of [[null, 'en'], ['', 'en'], ['fr', 'en'], ['ru', 'ru'], ['en', 'en']]) {
+    for (const [value, expected] of [[null, 'ru'], ['', 'ru'], ['fr', 'ru'], ['ru', 'ru'], ['en', 'en']]) {
       Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: () => value } })
       assert.equal(readLanguage(), expected)
     }
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('Blocked') } })
-    assert.equal(readLanguage(), 'en')
+    assert.equal(readLanguage(), 'ru')
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem() { throw new Error('Blocked') } } })
-    assert.equal(readLanguage(), 'en')
+    assert.equal(readLanguage(), 'ru')
   } finally {
     if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor)
     else delete globalThis.localStorage
   }
 })
 
-test('quantity rejects empty, fractional, nonfinite and out-of-range input', () => {
-  for (const value of ['', ' ', 0, -1, 1.5, '1.5', 'no', Infinity, NaN, 101]) {
-    assert.equal(isValidQuantity(value, 'portions'), false, String(value))
+test('quantity is counted in portions: big kazan and chef from 25, small 1–24', () => {
+  for (const value of ['', ' ', 0, -1, 1.5, '25.5', 'no', Infinity, NaN, 24, 501]) {
+    assert.equal(isValidQuantity(value, 'kazan'), false, String(value))
   }
-  for (const value of [1, '2', 100]) assert.equal(isValidQuantity(value, 'portions'), true)
-  assert.equal(isValidQuantity(2, 'kazan'), false)
-  assert.equal(isValidQuantity(3, 'kazan'), true)
-  assert.equal(isValidQuantity('', 'chef'), true)
-  assert.equal(isValidQuantity(2, 'unknown'), false)
+  for (const value of [25, '40', 500]) assert.equal(isValidQuantity(value, 'kazan'), true)
+  assert.equal(isValidQuantity(24, 'chef'), false)
+  assert.equal(isValidQuantity(25, 'chef'), true)
+  assert.equal(isValidQuantity(1, 'small'), true)
+  assert.equal(isValidQuantity(24, 'small'), true)
+  assert.equal(isValidQuantity(25, 'small'), false)
+  assert.equal(isValidQuantity(30, 'unknown'), false)
 })
 
 test('motion preference notifies on changes and unsubscribes', () => {

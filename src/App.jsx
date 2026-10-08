@@ -696,9 +696,10 @@ function ScrollProgress() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const WA_PHONE = '971526113477'
-const TG_USER = 'maxarab9'
+const TG_PHONE = '998881990461'
+const TG_PHONE_LABEL = '+998 88 199 04 61'
 const waUrl = (text) => `https://wa.me/${WA_PHONE}${text ? `?text=${encodeURIComponent(text)}` : ''}`
-const tgUrl = (text) => `https://t.me/${TG_USER}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+const tgUrl = (text) => `https://t.me/+${TG_PHONE}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 
 const INITIAL_LANG = readLanguage()
 
@@ -707,7 +708,7 @@ const STRINGS = {
     docTitle: 'Plov House — real Uzbek plov in Bali',
     eyebrow: 'From ancient Uzbekistan — to your table in Bali',
     title: 'PLOV',
-    tagline: 'Kazan-cooked over open fire. A IX-century recipe, served in Bali',
+    tagline: 'Cooked in an Uzbek kazan over open fire. A IX-century recipe, served in Bali',
     cta: 'Order plov',
     ctaNow: 'Order now',
     scrollHint: 'Scroll down',
@@ -722,16 +723,16 @@ const STRINGS = {
     quote: <>«Plov is not just food.<br />It is a ritual that gathers people together»</>,
     traditionText:
       'Uzbek plov has been known since the IX century — Avicenna called it «food that strengthens body and spirit». It is traditionally cooked by men in a big cast-iron kazan over open fire: for weddings, for holidays, or simply to gather the people you love. We carried that fire all the way across the ocean — to Bali.',
-    footerBrandSub: <>Real Uzbek plov<br />in Bali, Indonesia</>,
+    footerBrandSub: 'Bali, Indonesia',
     contactsHead: 'Contacts',
     whereHead: 'Where',
-    whereName: 'Honey Murena',
+    whereName: 'Wherever someone misses plov',
     whereArea: 'Bali, Indonesia',
     infoHead: 'Service',
-    infoLines: ['Canggu & nearby', 'Delivery · chef on-site', 'Monday & Thursday'],
+    infoLines: ['Canggu · Ubud · Uluwatu · Sanur', 'Delivery · chef on-site', 'Order 1–2 days ahead', 'Monday & Thursday'],
     orderHead: 'Order',
     orderBtn: 'Place an order',
-    orderNote: 'Big kazan from 3 kg · chef on-site by booking',
+    orderNote: 'Minimum order — 25 portions · chef on-site by booking',
     copyright: '© 2026 Plov House · Honey Murena',
     location: 'Bali, Indonesia · IX century — 2077',
     mTitle: 'Order plov',
@@ -741,12 +742,15 @@ const STRINGS = {
     mPlov: 'Kind of plov',
     mFormat: 'Format',
     formats: {
-      portions: 'Portions — delivery',
+      kazan: 'Big kazan — from 25 portions',
       chef: 'Chef on-site — villa / event',
-      kazan: 'Big kazan — by kilogram',
+      small: 'Small order — ask availability',
     },
     mQtyPortions: 'How many portions',
-    mQtyKg: 'How many kilograms',
+    mQtyHintBig: 'Minimum 25 portions. Order 1–2 days ahead — plov cooks for 5–6 hours.',
+    mQtyHintSmall: 'Small orders depend on availability — we will confirm in chat.',
+    ingredientsTitle: 'What goes into our kazan',
+    ingredients: ['Rice', 'Beef', 'Carrots', 'Onions', 'Oil', 'Chickpeas', 'Kishmish raisins', 'Garlic', 'Cumin straight from Tashkent’s Chorsu Bazaar', 'Salt & pepper'],
     mWa: 'Order in WhatsApp',
     mTg: 'Order in Telegram',
     mNote: 'We reply within minutes',
@@ -757,14 +761,13 @@ const STRINGS = {
       qty: 'Quantity',
       name: 'Name',
       portionsUnit: 'portion(s)',
-      kgUnit: 'kg',
     },
   },
   ru: {
     docTitle: 'Plov House — настоящий узбекский плов на Бали',
     eyebrow: 'Из глубины веков — к вашему столу на Бали',
     title: 'ПЛОВ',
-    tagline: 'Казанный, на открытом огне. Рецепт IX века — теперь на Бали',
+    tagline: 'Приготовлен в узбекском казане на открытом огне. Рецепт IX века — теперь на Бали',
     cta: 'Заказать плов',
     ctaNow: 'Заказать сейчас',
     scrollHint: 'Листать вниз',
@@ -779,16 +782,16 @@ const STRINGS = {
     quote: <>«Плов — это не просто еда.<br />Это ритуал, собирающий людей вместе»</>,
     traditionText:
       'Узбекский плов известен с IX века — Авиценна называл его «пищей, укрепляющей тело и дух». Традиционно его готовят мужчины в большом чугунном казане на открытом огне: на свадьбы, праздники или просто ради встречи с близкими. Мы перенесли этот огонь через океан — на Бали.',
-    footerBrandSub: <>Настоящий узбекский плов<br />на Бали, Индонезия</>,
+    footerBrandSub: 'Бали, Индонезия',
     contactsHead: 'Контакты',
     whereHead: 'Где мы',
-    whereName: 'Honey Murena',
+    whereName: 'Там, где человек скучает по плову',
     whereArea: 'Бали, Индонезия',
     infoHead: 'Сервис',
-    infoLines: ['Чангу и окрестности', 'Доставка · шеф на месте', 'Понедельник и четверг'],
+    infoLines: ['Чангу · Убуд · Улувату · Санур', 'Доставка · шеф на месте', 'Заказ за 1–2 дня', 'Понедельник и четверг'],
     orderHead: 'Заказать',
     orderBtn: 'Оформить заказ',
-    orderNote: 'Большой казан от 3 кг · шеф на месте по записи',
+    orderNote: 'Минимальный заказ — 25 порций · шеф на месте по записи',
     copyright: '© 2026 Plov House · Honey Murena',
     location: 'Бали, Индонезия · IX век — 2077',
     mTitle: 'Заказать плов',
@@ -798,12 +801,15 @@ const STRINGS = {
     mPlov: 'Вид плова',
     mFormat: 'Формат',
     formats: {
-      portions: 'Порции — доставка',
+      kazan: 'Большой казан — от 25 порций',
       chef: 'Шеф на месте — вилла / праздник',
-      kazan: 'Большой казан — килограммами',
+      small: 'Малый заказ — уточнить наличие',
     },
     mQtyPortions: 'Сколько порций',
-    mQtyKg: 'Сколько килограммов',
+    mQtyHintBig: 'Минимум 25 порций. Заказывайте за 1–2 дня — плов готовится 5–6 часов.',
+    mQtyHintSmall: 'Небольшие заказы — по наличию, уточним в чате.',
+    ingredientsTitle: 'Что кладём в казан',
+    ingredients: ['Рис', 'Говядина', 'Морковь', 'Лук', 'Масло', 'Нут', 'Изюм (кишмиш)', 'Чеснок', 'Зира прямо из Узбекистана — с базара Чорсу', 'Соль и перец'],
     mWa: 'Заказать в WhatsApp',
     mTg: 'Заказать в Telegram',
     mNote: 'Отвечаем в течение нескольких минут',
@@ -814,7 +820,6 @@ const STRINGS = {
       qty: 'Количество',
       name: 'Имя',
       portionsUnit: 'порц.',
-      kgUnit: 'кг',
     },
   },
 }
@@ -828,22 +833,15 @@ const PLOV_TYPES = [
     id: 'festive',
     accent: '#991B1B',
     accentLight: '#F87171',
-    name: { en: 'Festive', ru: 'Праздничный' },
+    name: { en: 'Tashkent festive', ru: 'Ташкентский праздничный' },
     tag:  { en: 'Celebration', ru: 'Для торжества' },
     desc: {
-      en: 'Lamb ribs slow-cooked over fire, whole garlic heads, quince and dried fruit. The plov they cook for weddings and the biggest days.',
-      ru: 'Бараньи рёбра на медленном огне, целые головки чеснока, айва и сухофрукты. Такой плов готовят к свадьбам и особым событиям.',
+      en: 'Wedding plov the Tashkent way: beef, sweet carrots, chickpeas and kishmish raisins, whole garlic heads. Elegant and mellow — the plov served at weddings and big celebrations.',
+      ru: 'Свадебный плов по-ташкентски: говядина, сладкая морковь, нут и кишмиш, целые головки чеснока. Нарядный и мягкий — его подают на свадьбах и больших праздниках.',
     },
-  },
-  {
-    id: 'tashkent',
-    accent: '#C46B39',
-    accentLight: '#F0A968',
-    name: { en: 'Tashkent-style', ru: 'Ташкентский' },
-    tag:  { en: 'Classic', ru: 'Классика' },
-    desc: {
-      en: 'The classic recipe: yellow carrots, cottonseed oil, devzira rice. The zirvak simmers for three hours — and you can taste every one of them.',
-      ru: 'Классический рецепт: жёлтая морковь, хлопковое масло, рис дев-зира. Зирвак томится три часа — и это чувствуется.',
+    features: {
+      en: ['Mellow, slightly sweet', 'Extra chickpeas & raisins', 'Festive serving'],
+      ru: ['Вкус мягкий, сладковатый', 'Больше нута и кишмиша', 'Праздничная подача'],
     },
   },
   {
@@ -851,21 +849,14 @@ const PLOV_TYPES = [
     accent: '#B8860B',
     accentLight: '#F5C84B',
     name: { en: 'Chaikhana', ru: 'Чайханский' },
-    tag:  { en: 'Street-style', ru: 'Уличный' },
+    tag:  { en: 'Teahouse classic', ru: 'Как в чайхане' },
     desc: {
-      en: 'Cooked the way teahouse masters feed a hundred guests: light cumin smoke, kishmish raisins and chickpeas. Unforgettable.',
-      ru: 'Как готовят мастера у чайханы на сто гостей: лёгкий дымок зиры, изюм кишмиш и нут. Незабываемо.',
+      en: 'Plov the way Uzbek teahouses make it: more beef and cumin from Chorsu Bazaar, rice soaked in a rich zirvak. Hearty and fragrant — an everyday classic.',
+      ru: 'Плов как в узбекской чайхане: больше мяса и зиры с базара Чорсу, рис пропитан насыщенным зирваком. Сытный и ароматный — классика на каждый день.',
     },
-  },
-  {
-    id: 'shavlya',
-    accent: '#6B3A2A',
-    accentLight: '#D69A6E',
-    name: { en: 'Shavlya', ru: 'Шавля' },
-    tag:  { en: 'Homestyle', ru: 'Домашний' },
-    desc: {
-      en: 'Plov’s cozy cousin — more vegetables, a juicy tomato base, tender rice. Comfort food, Uzbek edition.',
-      ru: 'Домашний брат плова — больше овощей, сочный томатный соус, нежный рис. Уют в тарелке.',
+    features: {
+      en: ['Rich and spiced', 'More beef & cumin', 'Hearty everyday classic'],
+      ru: ['Вкус насыщенный, пряный', 'Больше мяса и зиры', 'Сытная классика'],
     },
   },
 ]
@@ -873,18 +864,18 @@ const PLOV_TYPES = [
 const SERVICES = [
   {
     num: '01',
-    title: { en: 'Delivery by portion', ru: 'Порционная доставка' },
+    title: { en: 'Big kazan for events', ru: 'Большой казан на праздник' },
     desc: {
-      en: 'Hot kazan plov around Canggu — order from a single portion. About 60 minutes door to door.',
-      ru: 'Горячий казанный плов по Чангу — от одной порции. Около 60 минут до двери.',
+      en: 'Weddings, birthdays, big gatherings. Minimum order — 25 portions. Order 1–2 days ahead: plov cooks in the kazan for 5–6 hours. We deliver across Bali — Canggu, Ubud, Uluwatu, Sanur.',
+      ru: 'Свадьбы, дни рождения, большие компании. Минимальный заказ — 25 порций. Заказывайте за 1–2 дня: плов готовится в казане 5–6 часов. Привозим по всему Бали — Чангу, Убуд, Улувату, Санур.',
     },
     Icon: () => (
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1" y="3" width="15" height="13" rx="1" />
-        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-        <circle cx="5.5" cy="18.5" r="2.5" />
-        <circle cx="18.5" cy="18.5" r="2.5" />
+        <path d="M3 9h18" />
+        <path d="M4 9c0 7 3.5 10 8 10s8-3 8-10" />
+        <path d="M3 9 1.5 7.5M21 9l1.5-1.5" />
+        <ellipse cx="12" cy="7.5" rx="6.5" ry="1.8" />
       </svg>
     ),
   },
@@ -905,18 +896,18 @@ const SERVICES = [
   },
   {
     num: '03',
-    title: { en: 'Big kazan for events', ru: 'Большой казан на праздник' },
+    title: { en: 'Just a few portions?', ru: 'Нужна пара порций?' },
     desc: {
-      en: 'Weddings and big parties — we cook by the kilogram, from 3 kg per kazan. The classic large-order format.',
-      ru: 'Свадьбы и большие компании — готовим килограммами, от 3 кг на казан. Классика больших заказов.',
+      en: 'Small portion orders are not always available. Message us in WhatsApp or Telegram to find out the details.',
+      ru: 'Порционные заказы бывают не всегда. Напишите нам в WhatsApp или Telegram — расскажем подробности.',
     },
     Icon: () => (
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9h18" />
-        <path d="M4 9c0 7 3.5 10 8 10s8-3 8-10" />
-        <path d="M3 9 1.5 7.5M21 9l1.5-1.5" />
-        <ellipse cx="12" cy="7.5" rx="6.5" ry="1.8" />
+        <rect x="1" y="3" width="15" height="13" rx="1" />
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
       </svg>
     ),
   },
@@ -967,8 +958,8 @@ const ERAS = [
 
 const STATS = [
   { to: 11,   suffix: { en: ' centuries', ru: ' веков' }, label: { en: 'of living tradition', ru: 'живой традиции' } },
-  { to: 60,   suffix: { en: ' min',       ru: ' мин' },   label: { en: 'around Canggu',       ru: 'по Чангу' } },
-  { to: 4,    suffix: { en: ' kinds',     ru: ' вида' },  label: { en: 'of plov on the menu', ru: 'плова в меню' } },
+  { to: 25,   suffix: { en: ' portions',  ru: ' порций' }, label: { en: 'minimum kazan order', ru: 'минимальный казан' } },
+  { to: 2,    suffix: { en: ' kinds',     ru: ' вида' },  label: { en: 'of plov on the menu', ru: 'плова в меню' } },
   { to: 1500, suffix: { en: '+',          ru: '+' },      label: { en: 'happy guests',        ru: 'довольных гостей' } },
 ]
 
@@ -1769,11 +1760,30 @@ function PlovCard({ plov, index, onOrder, lang }) {
 
         <p style={{
           fontSize: '0.91rem', lineHeight: 1.68,
-          color: 'var(--text-soft)', flexGrow: 1,
-          marginBottom: '1.25rem',
+          color: 'var(--text-soft)',
+          marginBottom: '1rem',
         }}>
           {plov.desc[lang]}
         </p>
+
+        {/* What makes this plov different — scannable at a glance */}
+        <ul style={{
+          listStyle: 'none', flexGrow: 1,
+          display: 'flex', flexDirection: 'column', gap: '0.4rem',
+          marginBottom: '1.25rem',
+        }}>
+          {plov.features[lang].map((f) => (
+            <li key={f} style={{
+              display: 'flex', alignItems: 'center', gap: '0.55rem',
+              fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)',
+            }}>
+              <svg aria-hidden="true" width="10" height="10" viewBox="0 0 12 12" style={{ flexShrink: 0 }}>
+                <path d="M6 0 L12 6 L6 12 L0 6 Z" fill={plov.accentLight} />
+              </svg>
+              {f}
+            </li>
+          ))}
+        </ul>
 
         <button
           onClick={() => onOrder(plov.id)}
@@ -2346,8 +2356,8 @@ function TgIcon({ size = 18 }) {
 function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
   const t = STRINGS[lang]
   const [plov, setPlov] = useState(defaultPlov || PLOV_TYPES[0].id)
-  const [format, setFormat] = useState('portions')
-  const [qty, setQty] = useState(2)
+  const [format, setFormat] = useState('kazan')
+  const [qty, setQty] = useState(25)
   const [name, setName] = useState('')
   const prefersReduced = useReducedMotion()
   const firstInputRef = useRef(null)
@@ -2398,10 +2408,14 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
     }
   }, [isOpen, onClose])
 
-  const minQty = format === 'kazan' ? 3 : 1
+  const isSmall = format === 'small'
+  const minQty = isSmall ? 1 : 25
+  const maxQty = isSmall ? 24 : 500
   const setFormatSafe = (v) => {
     setFormat(v)
-    if (v === 'kazan' && qty < 3) setQty(3)
+    const n = Number(qty)
+    if (v === 'small' && !(n >= 1 && n <= 24)) setQty(5)
+    if (v !== 'small' && !(n >= 25)) setQty(25)
   }
 
   // The order is finished in the messenger of choice with a pre-filled text.
@@ -2416,10 +2430,8 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
       t.msg.hello,
       `• ${t.msg.type}: ${p ? p.name[lang] : ''}`,
       `• ${t.msg.format}: ${t.formats[format]}`,
+      `• ${t.msg.qty}: ${qty} ${t.msg.portionsUnit}`,
     ]
-    if (format !== 'chef') {
-      lines.push(`• ${t.msg.qty}: ${qty} ${format === 'kazan' ? t.msg.kgUnit : t.msg.portionsUnit}`)
-    }
     if (name.trim()) lines.push(`• ${t.msg.name}: ${name.trim()}`)
     const msg = lines.join('\n')
     window.open(kind === 'wa' ? waUrl(msg) : tgUrl(msg), '_blank', 'noopener,noreferrer')
@@ -2542,9 +2554,9 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
                     className="plov-input"
                     style={{ ...inputSt, cursor: 'pointer', appearance: 'none', paddingRight: '2.5rem' }}
                   >
-                    <option value="portions">{t.formats.portions}</option>
-                    <option value="chef">{t.formats.chef}</option>
                     <option value="kazan">{t.formats.kazan}</option>
+                    <option value="chef">{t.formats.chef}</option>
+                    <option value="small">{t.formats.small}</option>
                   </select>
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
                     stroke="var(--brown-mid)" strokeWidth="2"
@@ -2554,24 +2566,24 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
                 </div>
               </div>
 
-              {format !== 'chef' && (
-                <div>
-                  <label htmlFor="order-qty" style={labelSt}>
-                    {format === 'kazan' ? t.mQtyKg : t.mQtyPortions}
-                  </label>
-                  <input
-                    id="order-qty"
-                    ref={quantityRef}
-                    required
-                    type="number"
-                    min={minQty} max={100} step={1}
-                    value={qty}
-                    onChange={e => setQty(e.target.value)}
-                    className="plov-input"
-                    style={inputSt}
-                  />
-                </div>
-              )}
+              <div>
+                <label htmlFor="order-qty" style={labelSt}>{t.mQtyPortions}</label>
+                <input
+                  id="order-qty"
+                  ref={quantityRef}
+                  required
+                  type="number"
+                  min={minQty} max={maxQty} step={1}
+                  value={qty}
+                  onChange={e => setQty(e.target.value)}
+                  aria-describedby="order-qty-hint"
+                  className="plov-input"
+                  style={inputSt}
+                />
+                <p id="order-qty-hint" style={{ fontSize: '0.78rem', color: '#8B6F56', marginTop: '0.4rem', lineHeight: 1.45 }}>
+                  {isSmall ? t.mQtyHintSmall : t.mQtyHintBig}
+                </p>
+              </div>
 
               <div>
                 <label htmlFor="order-name" style={labelSt}>{t.mName}</label>
@@ -2765,7 +2777,7 @@ function HeroSection({ onOrder, lang }) {
             fontWeight: 900, lineHeight: 0.92,
             color: 'var(--cream)',
             margin: '0 0 0.3em',
-            letterSpacing: '-0.025em',
+            letterSpacing: '-0.01em',
             display: 'flex',
             justifyContent: 'center',
           }}
@@ -2784,6 +2796,8 @@ function HeroSection({ onOrder, lang }) {
               style={{
                 display: 'inline-block',
                 transformOrigin: 'bottom',
+                // the first two letters (П/P + Л/L) were nearly touching
+                marginRight: i === 0 ? '0.05em' : 0,
                 textShadow: '0 0 40px rgba(245,158,11,0.4), 0 0 90px rgba(34,211,238,0.22)',
               }}
             >
@@ -3060,14 +3074,47 @@ export default function App() {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
-          gap: '1.5rem',
-          maxWidth: 1120, margin: '0 auto',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+          gap: '1.75rem',
+          maxWidth: 860, margin: '0 auto',
           position: 'relative', zIndex: 1,
         }}>
           {PLOV_TYPES.map((plov, i) => (
             <PlovCard key={plov.id} plov={plov} index={i} onOrder={openOrder} lang={lang} />
           ))}
+        </div>
+
+        {/* The real recipe — shared by both plovs */}
+        <div style={{
+          maxWidth: 860, margin: '2rem auto 0',
+          position: 'relative', zIndex: 1,
+          textAlign: 'center',
+          padding: '1.4rem 1.25rem',
+          borderRadius: 18,
+          background: 'rgba(16,8,24,0.72)',
+          border: '1px solid rgba(212,175,55,0.22)',
+        }}>
+          <h3 style={{
+            fontFamily: 'var(--font-heading)', fontSize: '1.15rem', fontWeight: 700,
+            color: 'var(--gold)', marginBottom: '0.9rem',
+          }}>
+            {t.ingredientsTitle}
+          </h3>
+          <ul style={{
+            listStyle: 'none',
+            display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem',
+          }}>
+            {t.ingredients.map((item) => (
+              <li key={item} style={{
+                padding: '0.35rem 0.85rem', borderRadius: 99,
+                fontSize: '0.86rem', color: 'var(--text)',
+                background: 'rgba(253,245,230,0.07)',
+                border: '1px solid rgba(253,245,230,0.14)',
+              }}>
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -3319,7 +3366,7 @@ export default function App() {
               </a>
               <a href={tgUrl(t.msg.hello)} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
                 <span style={{ color: '#34AADF', display: 'inline-flex', flexShrink: 0 }}><TgIcon size={15} /></span>
-                Telegram · @{TG_USER}
+                Telegram · {TG_PHONE_LABEL}
               </a>
             </div>
             <h3 style={{ ...footerHeadSt, marginTop: '1.2rem' }}>{t.whereHead}</h3>
