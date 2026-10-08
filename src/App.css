@@ -34,3 +34,12 @@
 @media (prefers-reduced-motion: reduce) {
   .plov-tilt { transition: none; }
 }
+
+/* Footer contact links: obviously clickable */
+.footer-link { cursor: pointer; }
+.footer-link:hover,
+.footer-link:focus-visible {
+  color: #FDF5E6 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}

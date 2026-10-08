@@ -699,7 +699,9 @@ const WA_PHONE = '971526113477'
 const TG_PHONE = '998881990461'
 const TG_PHONE_LABEL = '+998 88 199 04 61'
 const waUrl = (text) => `https://wa.me/${WA_PHONE}${text ? `?text=${encodeURIComponent(text)}` : ''}`
-const tgUrl = (text) => `https://t.me/+${TG_PHONE}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+// Telegram opens the contact by phone number. Phone links can't carry a
+// pre-filled message, so the order text is copied to the clipboard instead.
+const tgUrl = () => `https://t.me/+${TG_PHONE}`
 
 const INITIAL_LANG = readLanguage()
 
@@ -2434,7 +2436,8 @@ function OrderModal({ isOpen, onClose, defaultPlov, lang }) {
     ]
     if (name.trim()) lines.push(`• ${t.msg.name}: ${name.trim()}`)
     const msg = lines.join('\n')
-    window.open(kind === 'wa' ? waUrl(msg) : tgUrl(msg), '_blank', 'noopener,noreferrer')
+    if (kind === 'tg') navigator.clipboard?.writeText(msg).catch(() => {})
+    window.open(kind === 'wa' ? waUrl(msg) : tgUrl(), '_blank', 'noopener,noreferrer')
     onClose()
   }
 
@@ -3360,11 +3363,11 @@ export default function App() {
           <div>
             <h3 style={footerHeadSt}>{t.contactsHead}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <a href={waUrl(t.msg.hello)} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+              <a href={waUrl(t.msg.hello)} target="_blank" rel="noopener noreferrer" className="footer-link" style={footerLinkSt}>
                 <span style={{ color: '#25D366', display: 'inline-flex', flexShrink: 0 }}><WaIcon size={15} /></span>
                 WhatsApp · +971 52 611 34 77
               </a>
-              <a href={tgUrl(t.msg.hello)} target="_blank" rel="noopener noreferrer" style={footerLinkSt}>
+              <a href={tgUrl()} target="_blank" rel="noopener noreferrer" className="footer-link" style={footerLinkSt}>
                 <span style={{ color: '#34AADF', display: 'inline-flex', flexShrink: 0 }}><TgIcon size={15} /></span>
                 Telegram · {TG_PHONE_LABEL}
               </a>
