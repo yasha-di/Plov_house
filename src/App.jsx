@@ -12,6 +12,9 @@ import {
 import './App.css'
 import { useReducedMotion } from './useReducedMotion'
 import { readLanguage, isValidQuantity } from './preferences.mjs'
+import steamWisp1 from './assets/steam/wisp1.webp'
+import steamWisp2 from './assets/steam/wisp2.webp'
+import steamWisp3 from './assets/steam/wisp3.webp'
 import skyKalyan from './assets/skyline/kalyan.webp'
 import skyGurEmir from './assets/skyline/gur-emir.webp'
 import skyRegistan from './assets/skyline/registan.webp'
@@ -838,113 +841,68 @@ const STATS = [
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  FALLING INGREDIENTS
+//  EMBERS — warm sparks rising from the fire under the kazan
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SHAPES = {
-  rice: (
-    <svg width="6" height="13" viewBox="0 0 6 13">
-      <ellipse cx="3" cy="6.5" rx="2.4" ry="6" fill="#F5DEB3" />
-    </svg>
-  ),
-  riceGold: (
-    <svg width="5" height="12" viewBox="0 0 5 12">
-      <ellipse cx="2.5" cy="6" rx="2" ry="5.5" fill="#EED9A0" />
-    </svg>
-  ),
-  carrot: (
-    <svg width="14" height="9" viewBox="0 0 14 9">
-      <ellipse cx="7" cy="4.5" rx="6.5" ry="3.4" fill="#E07B39" />
-      <ellipse cx="7" cy="4.5" rx="3" ry="1.5" fill="#EF9355" />
-    </svg>
-  ),
-  cumin: (
-    <svg width="4" height="10" viewBox="0 0 4 10">
-      <path d="M2 0 Q4 5 2 10 Q0 5 2 0Z" fill="#C9962F" />
-    </svg>
-  ),
-  raisin: (
-    <svg width="9" height="7" viewBox="0 0 9 7">
-      <ellipse cx="4.5" cy="3.5" rx="4" ry="3" fill="#3E1A33" />
-      <ellipse cx="3" cy="2.4" rx="1" ry="0.8" fill="#5C2C4E" />
-    </svg>
-  ),
-  chickpea: (
-    <svg width="11" height="11" viewBox="0 0 11 11">
-      <circle cx="5.5" cy="5.5" r="5" fill="#D4A762" />
-      <circle cx="4" cy="4" r="1.5" fill="#E3BC82" />
-    </svg>
-  ),
-}
-
-const SHAPE_KEYS = ['rice', 'rice', 'riceGold', 'carrot', 'cumin', 'raisin', 'chickpea']
-const PARTICLE_COUNT = 26
-
-// Stable particle layout, generated once at module load.
-const PARTICLES = Array.from({ length: PARTICLE_COUNT }, (_, i) => {
+// Stable layout, generated once. Each ember is ONE element: a tiny hot core,
+// a tight glow ring and a very faint wide halo that softly "lights" whatever
+// it drifts over. Pure CSS animation of transform + opacity, so it runs on
+// the compositor — no filters, blend modes or shadows.
+const EMBER_COLORS = [
+  ['#FFF6D6', '#FFB347'],   // white-saffron core → orange
+  ['#FFEFB0', '#FF8A3D'],   // saffron → ember orange
+  ['#FFE2A8', '#F2604A'],   // apricot → pomegranate-red
+]
+const EMBERS = Array.from({ length: 18 }, (_, i) => {
   const r = Math.random
+  const [core, edge] = EMBER_COLORS[i % EMBER_COLORS.length]
+  const rise = 10 + r() * 8
   return {
-    id:      i,
-    shape:   SHAPE_KEYS[Math.floor(r() * SHAPE_KEYS.length)],
-    left:    r() * 100,
-    size:    0.7 + r() * 0.7,
-    fall:    7 + r() * 7,
-    delay:   r() * 9,
-    sway:    12 + r() * 26,
-    swayDur: 2.2 + r() * 2.4,
-    spin:    (r() > 0.5 ? 1 : -1) * (180 + r() * 280),
-    opacity: 0.22 + r() * 0.4,
+    id: i,
+    left: 3 + r() * 94,
+    size: 80 + r() * 40,         // whole element incl. faint halo; core is ~4px
+    rise,
+    delay: -r() * rise,          // start mid-flight, no empty first seconds
+    sway: (r() > 0.5 ? 1 : -1) * (14 + r() * 30),
+    flicker: 1.2 + r() * 2,
+    opacity: 0.8 + r() * 0.2,
+    core, edge,
   }
 })
 
-function FallingPiece({ p }) {
-  return (
-    <motion.div
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: `${p.left}vw`,
-        opacity: p.opacity,
-        scale: p.size,
-        willChange: 'transform',
-      }}
-      initial={{ y: '-12vh' }}
-      animate={{
-        y:      ['-12vh', '112vh'],
-        x:      [0, p.sway, -p.sway * 0.6, p.sway * 0.4, 0],
-        rotate: [0, p.spin],
-      }}
-      transition={{
-        y:      { duration: p.fall, delay: p.delay, repeat: Infinity, ease: 'linear' },
-        x:      { duration: p.swayDur, repeat: Infinity, ease: 'easeInOut' },
-        rotate: { duration: p.fall, delay: p.delay, repeat: Infinity, ease: 'linear' },
-      }}
-    >
-      {SHAPES[p.shape]}
-    </motion.div>
-  )
-}
-
-function RiceRain() {
+function Embers() {
   const prefersReduced = useReducedMotion()
   const coarse = useCoarsePointer()
   if (prefersReduced) return null
-  // Phones and weak machines get a lighter shower — steadier FPS.
-  const list = (coarse || IS_LITE) ? PARTICLES.slice(0, 10) : PARTICLES.slice(0, 18)
+  // Phones and weak machines get half as many.
+  const list = (coarse || IS_LITE) ? EMBERS.slice(0, 9) : EMBERS
 
   return (
     <div
       aria-hidden="true"
+      className="embers"
       style={{
-        position: 'fixed',
-        inset: 0,
+        position: 'fixed', inset: 0,
         overflow: 'hidden',
         pointerEvents: 'none',
         zIndex: 'var(--z-particles)',
       }}
     >
-      {list.map((p) => (
-        <FallingPiece key={p.id} p={p} />
+      {list.map((e) => (
+        <div key={e.id} className="ember"
+          style={{
+            left: `${e.left}%`,
+            width: e.size, height: e.size, marginLeft: -e.size / 2,
+            '--sway': `${e.sway}px`,
+            animationDuration: `${e.rise}s`, animationDelay: `${e.delay}s`,
+          }}>
+          <div className="ember-glow"
+            style={{
+              '--o': e.opacity,
+              animationDuration: `${e.flicker}s`,
+              background: `radial-gradient(circle closest-side, ${e.core} 0%, ${e.core} 4%, ${e.edge} 8%, ${e.edge}99 11%, ${e.edge}40 20%, ${e.edge}1F 40%, ${e.edge}0D 68%, transparent 100%)`,
+            }} />
+        </div>
       ))}
     </div>
   )
@@ -954,44 +912,37 @@ function RiceRain() {
 //  STEAM
 // ═══════════════════════════════════════════════════════════════════════════
 
-function SteamPuff({ delay, x, size = 10 }) {
+// Realistic steam: soft, wispy smoke sprites (tiny pre-rendered WebP with
+// alpha, ~6KB each) that rise, stretch, twist and dissolve. Animated with
+// CSS transform + opacity only — no blur filters, so it stays cheap.
+const STEAM_SPRITES = [steamWisp1, steamWisp2, steamWisp3]
+const STEAM_WISPS = [
+  { x: 34, w: 64, img: 0, flip:  1, dur: 5.6, delay: -0.4, drift: -14, turn: -6 },
+  { x: 52, w: 76, img: 1, flip: -1, dur: 6.4, delay: -2.6, drift:   6, turn:  4 },
+  { x: 68, w: 62, img: 2, flip:  1, dur: 5.2, delay: -1.5, drift:  16, turn:  7 },
+  { x: 44, w: 70, img: 2, flip: -1, dur: 6.0, delay: -4.1, drift:  -6, turn: -3 },
+  { x: 60, w: 66, img: 0, flip: -1, dur: 5.8, delay: -3.3, drift:  10, turn:  5 },
+]
+
+function HeroSteam() {
   const prefersReduced = useReducedMotion()
   if (prefersReduced) return null
   return (
-    <motion.div
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        bottom: '100%',
-        left: `${x}%`,
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: 'rgba(255,255,255,0.22)',
-        filter: 'blur(5px)',
-        transform: 'translateX(-50%)',
-        pointerEvents: 'none',
-      }}
-      animate={{
-        y:       [-4, -72],
-        x:       [0, x < 50 ? -10 : 10],
-        opacity: [0, 0.55, 0],
-        scale:   [0.4, 1.6, 0.7],
-      }}
-      transition={{ duration: 2.8, delay, repeat: Infinity, ease: 'easeOut' }}
-    />
-  )
-}
-
-function HeroSteam() {
-  return (
     <div aria-hidden="true"
       style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}>
-      <SteamPuff delay={0.0} x={38} size={11} />
-      <SteamPuff delay={0.6} x={50} size={14} />
-      <SteamPuff delay={1.2} x={62} size={10} />
-      <SteamPuff delay={0.3} x={44} size={8}  />
-      <SteamPuff delay={1.7} x={56} size={9}  />
+      {STEAM_WISPS.map((p, i) => (
+        <img key={i} className="steam-wisp" src={STEAM_SPRITES[p.img]} alt="" draggable="false"
+          style={{
+            left: `${p.x}%`,
+            width: p.w, height: p.w * 2,
+            marginLeft: -p.w / 2,
+            '--f': p.flip,
+            '--drift': `${p.drift}px`,
+            '--turn': `${p.turn}deg`,
+            animationDuration: `${p.dur}s`,
+            animationDelay: `${p.delay}s`,
+          }} />
+      ))}
     </div>
   )
 }
@@ -1393,36 +1344,49 @@ function HoloTile({ size = 46, color = '#22D3EE', inner = '#F59E0B', float = 18,
   )
 }
 
-// Animated woven divider: ikat bands shimmer sideways forever,
-// and the whole ribbon "weaves in" (scaleX) when scrolled into view.
+// Ornamental section divider: a hair-thin golden line that fades out at both
+// ends, with a small eight-pointed girih star in the centre flanked by tiny
+// diamonds. The lines draw outward from the star once, when scrolled into
+// view; after that it is completely static (no infinite animation).
 function IkatDivider() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
-  // Shimmer runs only while the ribbon is actually on screen.
-  const live = useInView(ref)
   const prefersReduced = useReducedMotion()
+  const shown = inView || prefersReduced
+  const line = (dir) => ({
+    flex: 1, height: 1,
+    background: `linear-gradient(${dir}, transparent 0%, rgba(255,214,170,0.18) 30%, rgba(255,214,170,0.7) 100%)`,
+    transformOrigin: dir === '90deg' ? 'right center' : 'left center',
+    transform: shown ? 'scaleX(1)' : 'scaleX(0)',
+    transition: prefersReduced ? 'none' : 'transform 1.1s cubic-bezier(0.22,1,0.36,1) 0.15s',
+  })
+  const dot = (
+    <svg width="7" height="7" viewBox="0 0 8 8" style={{ flex: 'none' }}>
+      <path d="M4 0 L8 4 L4 8 L0 4 Z" fill="#FFB347" opacity="0.85" />
+    </svg>
+  )
   return (
-    <div ref={ref} aria-hidden="true" style={{ overflow: 'hidden', position: 'relative', zIndex: 'var(--z-content)' }}>
-      <motion.div
-        initial={{ scaleX: 0 }}
-        animate={inView ? { scaleX: 1 } : {}}
-        transition={{ duration: prefersReduced ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
-        style={{ transformOrigin: 'left center', overflow: 'hidden', height: 7 }}
-      >
-        <motion.div
-          style={{
-            height: '100%',
-            width: 'calc(100% + 112px)',
-            background:
-              'repeating-linear-gradient(90deg, #F59E0B 0 14px, #E11D48 14px 28px, #22D3EE 28px 42px, #8B5CF6 42px 56px)',
-            skewX: -24,
-            transformOrigin: 'left center',
-            opacity: 0.85,
-          }}
-          animate={prefersReduced || !live ? {} : { x: [0, -56] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: 'linear' }}
-        />
-      </motion.div>
+    <div ref={ref} aria-hidden="true" style={{
+      position: 'relative', zIndex: 'var(--z-content)',
+      display: 'flex', alignItems: 'center', gap: 12,
+      width: 'min(760px, 86%)', margin: '0 auto', height: 28,
+    }}>
+      <span style={line('90deg')} />
+      {dot}
+      <svg width="26" height="26" viewBox="-13 -13 26 26" style={{
+        flex: 'none',
+        opacity: shown ? 1 : 0,
+        transform: shown ? 'rotate(0deg) scale(1)' : 'rotate(-45deg) scale(0.6)',
+        transition: prefersReduced ? 'none' : 'opacity 0.6s ease, transform 0.9s cubic-bezier(0.22,1,0.36,1)',
+      }}>
+        {/* eight-pointed star = two overlapping squares */}
+        <rect x="-8" y="-8" width="16" height="16" fill="none" stroke="#FFD6AA" strokeWidth="1.2" />
+        <rect x="-8" y="-8" width="16" height="16" fill="none" stroke="#FFD6AA" strokeWidth="1.2" transform="rotate(45)" />
+        <circle r="3.2" fill="#E8435E" />
+        <circle r="1.3" fill="#FFE08A" />
+      </svg>
+      {dot}
+      <span style={line('270deg')} />
     </div>
   )
 }
@@ -1484,33 +1448,8 @@ function SectionTitle({ children, sub }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  PLOV CARD — 3D tilt + steam + neon hover
+//  PLOV CARD — 3D tilt + neon hover
 // ═══════════════════════════════════════════════════════════════════════════
-
-// Steam curls above a card while it is "active" (hovered, or centred on phones).
-function CardSteam({ visible }) {
-  const prefersReduced = useReducedMotion()
-  if (prefersReduced || !visible) return null
-  return (
-    <div aria-hidden="true" style={{
-      position: 'absolute', bottom: '100%', left: 0, right: 0, height: 56,
-      pointerEvents: 'none', overflow: 'hidden',
-    }}>
-      {[33, 50, 67].map((x, i) => (
-        <motion.div key={i}
-          style={{
-            position: 'absolute', bottom: 0, left: `${x}%`,
-            width: 8, height: 8, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.28)', filter: 'blur(3px)',
-            transform: 'translateX(-50%)',
-          }}
-          animate={{ y: -50, opacity: [0, 0.65, 0], scale: [0.4, 1.3, 0.6] }}
-          transition={{ duration: 1.6, delay: i * 0.28, repeat: Infinity, ease: 'easeOut' }}
-        />
-      ))}
-    </div>
-  )
-}
 
 // Menu card. The outer <Reveal> handles the one-time rise-in; the inner
 // .plov-tilt layer leans toward the cursor (3D tilt + lift). Pointer moves
@@ -1587,7 +1526,6 @@ function PlovCard({ plov, index, onOrder, lang }) {
           flexDirection: 'column',
         }}
       >
-        <CardSteam visible={active} />
 
         {/* lacquer gloss over the painting */}
         <div aria-hidden="true" style={{
@@ -1958,12 +1896,16 @@ const ERA_DIRS = [
 // they came, one by one. Perf: only the card-sized element moves, and cards
 // buried two deep are hidden entirely.
 function EraSlide({ era, index, total, progress, lang }) {
-  const F = 0.12                                   // length of one flight
-  const STEP = (1 - 2 * F) / Math.max(total - 1, 1) // spacing between landings
-  const land = (i) => F + i * STEP                  // 0.12, 0.38, 0.64, 0.90
+  // The first card is already in place when the section arrives, so there
+  // is never an empty screen. Each next card flies in over F of the scroll
+  // and rests briefly; a short TAIL at the end lets the last one settle.
+  const F = 0.2                                     // length of one flight
+  const TAIL = 0.06
+  const STEP = (1 - TAIL) / Math.max(total - 1, 1)  // spacing between landings
+  const land = (i) => i * STEP                      // 0, 0.31, 0.63, 0.94
   const d = ERA_DIRS[index % ERA_DIRS.length]
   const e1 = land(index)
-  const e0 = Math.max(e1 - F, 0.001)
+  const e0 = Math.max(e1 - F, 0)
   const e0m = e1 - 0.45 * F
   const hasCover = index < total - 1
   const hasBury = index < total - 2
@@ -1973,13 +1915,14 @@ function EraSlide({ era, index, total, progress, lang }) {
   const vw = (v) => `${v}vw`
   const vh = (v) => `${v}vh`
   // Off-screen start → eased landing (75% of the path done by mid-flight).
-  const R   = [0, e0, e0m, e1]
-  const X   = [vw(d.inX), vw(d.inX), vw(d.inX * 0.25), vw(0)]
-  const Y   = [vh(d.inY), vh(d.inY), vh(d.inY * 0.25), vh(0)]
-  const ROT = [d.inRot, d.inRot, d.inRot * 0.25 + d.restRot * 0.75, d.restRot]
-  const SC  = [1, 1, 1, 1]
-  const DIM = [0, 0, 0, 0]
-  const OP  = [1, 1, 1, 1]
+  const first = index === 0
+  const R   = first ? [0] : [0, e0, e0m, e1]
+  const X   = first ? [vw(0)] : [vw(d.inX), vw(d.inX), vw(d.inX * 0.25), vw(0)]
+  const Y   = first ? [vh(0)] : [vh(d.inY), vh(d.inY), vh(d.inY * 0.25), vh(0)]
+  const ROT = first ? [d.restRot] : [d.inRot, d.inRot, d.inRot * 0.25 + d.restRot * 0.75, d.restRot]
+  const SC  = first ? [1] : [1, 1, 1, 1]
+  const DIM = first ? [0] : [0, 0, 0, 0]
+  const OP  = first ? [1] : [1, 1, 1, 1]
   if (hasCover) {
     R.push(c0, c1)
     X.push(vw(0), vw(0)); Y.push(vh(0), vh(0)); ROT.push(d.restRot, d.restRot)
@@ -2035,6 +1978,9 @@ function JourneySection({ lang }) {
   const t = STRINGS[lang]
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  // A short, stiff spring turns chunky mouse-wheel steps (100px jumps on
+  // Windows) into smooth motion without feeling laggy (~0.15s to settle).
+  const smooth = useSpring(scrollYProgress, { stiffness: 320, damping: 42, mass: 0.5, restDelta: 0.0005 })
 
   // Phones and reduced motion: separate cards that rise in
   // one by one as you scroll (natural page scrolling, no pinning).
@@ -2060,14 +2006,14 @@ function JourneySection({ lang }) {
       ref={ref}
       style={{
         position: 'relative',
-        height: `${ERAS.length * 100}svh`,
+        height: `${100 + (ERAS.length - 1) * 65}svh`,
         zIndex: 'var(--z-content)',
       }}
     >
       <div style={{ position: 'sticky', top: 0, height: '100svh', overflow: 'hidden' }}>
         {ERAS.map((era, i) => (
           <EraSlide key={era.num} era={era} index={i} total={ERAS.length}
-            progress={scrollYProgress} lang={lang} />
+            progress={smooth} lang={lang} />
         ))}
 
         {/* Sticky section header */}
@@ -2549,10 +2495,6 @@ function HeroSection({ onOrder, lang }) {
   // kazan with gentle steam, centred.
   const coarse = useCoarsePointer()
   const heroRef = useRef(null)
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
-  const contentScale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
-  const contentY = useTransform(scrollYProgress, [0, 1], [0, -80])
   // Pause every infinite hero animation once the hero is scrolled away —
   // steam, holo tiles, arch dashes and embers stop burning frames.
   const heroVisible = useInView(heroRef)
@@ -2595,9 +2537,6 @@ function HeroSection({ onOrder, lang }) {
         position: 'relative',
         zIndex: 2,
         maxWidth: 700,
-        opacity: prefersReduced ? 1 : contentOpacity,
-        scale:   prefersReduced ? 1 : contentScale,
-        y:       prefersReduced ? 0 : contentY,
       }}>
         {/* The oshpaz stirring his kazan, framed by the neon iwan arch.
             On phones: just the kazan, centred, with gentle steam. */}
@@ -2706,19 +2645,7 @@ function HeroSection({ onOrder, lang }) {
           style={{ position: 'relative', display: 'inline-block' }}
         >
           {!prefersReduced && heroVisible && (
-            <motion.div
-              aria-hidden="true"
-              animate={{ opacity: [0.45, 0.85, 0.45], scale: [0.95, 1.08, 0.95] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-              style={{
-                position: 'absolute', inset: -6,
-                borderRadius: 18,
-                background: 'radial-gradient(ellipse at center, rgba(208,44,74,0.6) 0%, transparent 70%)',
-                filter: 'blur(16px)',
-                zIndex: 0,
-                pointerEvents: 'none',
-              }}
-            />
+            <div aria-hidden="true" className="cta-halo" style={{ borderRadius: 14 }} />
           )}
           <motion.button
             whileHover={prefersReduced ? {} : { scale: 1.06 }}
@@ -2736,7 +2663,7 @@ function HeroSection({ onOrder, lang }) {
               cursor: 'pointer',
               letterSpacing: '0.04em',
               fontFamily: 'var(--font-body)',
-              boxShadow: '0 8px 30px rgba(208,44,74,0.45)',
+              boxShadow: 'none',
               transition: 'box-shadow 0.28s',
             }}
           >
@@ -2922,7 +2849,7 @@ export default function App() {
       <BootSplash lang={lang} />
       <IkatBackground />
       <Skyline />
-      <RiceRain />
+      <Embers />
       <ScrollProgress />
       <EdgeGlow />
       <TapRipples />
@@ -3086,12 +3013,15 @@ export default function App() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+          <span style={{ position: 'relative', display: 'inline-block' }}>
+          {!prefersReduced && <span aria-hidden="true" className="cta-halo" style={{ borderRadius: 13, animationDelay: '-1.1s' }} />}
           <motion.button
             whileHover={prefersReduced ? {} : { scale: 1.05 }}
             whileTap={prefersReduced  ? {} : { scale: 0.96 }}
             onClick={() => openOrder()}
             className="cta-btn"
             style={{
+              position: 'relative', zIndex: 1,
               padding: '1rem 2.6rem',
               borderRadius: 13,
               border: 'none',
@@ -3100,12 +3030,13 @@ export default function App() {
               fontSize: '1.05rem', fontWeight: 700,
               cursor: 'pointer', letterSpacing: '0.04em',
               fontFamily: 'var(--font-body)',
-              boxShadow: '0 6px 26px rgba(208,44,74,0.42)',
+              boxShadow: 'none',
               transition: 'box-shadow 0.28s',
             }}
           >
             {t.ctaNow}
           </motion.button>
+          </span>
         </div>
       </section>
 
@@ -3281,10 +3212,13 @@ export default function App() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <h3 style={footerHeadSt}>{t.orderHead}</h3>
+            <span style={{ position: 'relative', display: 'inline-block', alignSelf: 'flex-start' }}>
+            {!prefersReduced && <span aria-hidden="true" className="cta-halo" style={{ borderRadius: 11, animationDelay: '-2.2s' }} />}
             <button
               onClick={() => openOrder()}
               className="cta-btn"
               style={{
+                position: 'relative', zIndex: 1,
                 padding: '0.75rem 1.5rem',
                 borderRadius: 11, border: 'none',
                 background: 'linear-gradient(135deg, #D02C4A 0%, #851329 100%)',
@@ -3293,12 +3227,13 @@ export default function App() {
                 cursor: 'pointer', letterSpacing: '0.03em',
                 fontFamily: 'var(--font-body)',
                 alignSelf: 'flex-start',
-                boxShadow: '0 4px 20px rgba(208,44,74,0.38)',
+                boxShadow: 'none',
                 transition: 'box-shadow 0.28s',
               }}
             >
               {t.orderBtn}
             </button>
+            </span>
             <p style={{ fontSize: '0.8rem', color: 'rgba(250,226,208,0.58)' }}>
               {t.orderNote}
             </p>
