@@ -768,7 +768,7 @@ const SERVICES = [
   },
   {
     num: '03',
-    title: { en: 'Plov by the portion · Mon & Thu', ru: 'Плов порциями · пн и чт' },
+    title: { en: 'Plov by the portion · Mon\u00A0&\u00A0Thu', ru: 'Плов порциями · пн\u00A0и\u00A0чт' },
     desc: {
       en: 'Every Monday and Thursday we cook a kazan — on those days you can order plov by the portion. Message us in WhatsApp or Telegram for the details.',
       ru: 'Каждый понедельник и четверг мы готовим казан — в эти дни плов можно заказать порциями. Напишите нам в WhatsApp или Telegram, чтобы узнать подробности.',
@@ -1441,9 +1441,9 @@ function SectionTitle({ children, sub }) {
         transition={{ duration: prefersReduced ? 0 : 0.6, ease: 'easeOut' }}
         style={{
           fontFamily: 'var(--font-heading)',
-          fontSize: 'clamp(1.9rem, 4.5vw, 2.9rem)',
+          fontSize: 'clamp(1.95rem, 4.6vw, 2.8rem)',
           fontWeight: 700,
-          color: 'var(--cream)',
+          color: 'var(--head)',
           lineHeight: 1.2,
           marginBottom: sub ? '0.6rem' : 0,
         }}
@@ -1457,7 +1457,7 @@ function SectionTitle({ children, sub }) {
           transition={{ duration: prefersReduced ? 0 : 0.6, delay: 0.15 }}
           style={{
             fontSize: '1rem',
-            color: 'rgba(253,245,230,0.65)',
+            color: 'rgba(250,226,208,0.65)',
             fontFamily: 'var(--font-body)',
           }}
         >
@@ -1623,8 +1623,9 @@ function PlovCard({ plov, index, onOrder, lang }) {
 
         <h3 style={{
           fontFamily: 'var(--font-heading)',
-          fontSize: '1.32rem', fontWeight: 700,
-          color: 'var(--text)',
+          fontSize: '1.45rem', fontWeight: 600,
+          lineHeight: 1.25,
+          color: 'var(--head)',
           marginBottom: '0.55rem',
         }}>
           {plov.name[lang]}
@@ -1828,8 +1829,8 @@ function EraCard({ era, lang }) {
 
         <h3 style={{
           fontFamily: 'var(--font-heading)',
-          fontSize: 'clamp(1.55rem, 3.8vw, 2.2rem)',
-          fontWeight: 700, color: '#F6EFE2',
+          fontSize: 'clamp(1.5rem, 3.6vw, 2.1rem)',
+          fontWeight: 700, color: 'var(--head)',
           lineHeight: 1.2,
         }}>
           {era.title[lang]}
@@ -2091,7 +2092,7 @@ function JourneySection({ lang }) {
           width: 'min(70vw, 360px)',
           zIndex: 10,
         }}>
-          <div style={{ height: 2, borderRadius: 2, background: 'rgba(253,245,230,0.14)', overflow: 'hidden' }}>
+          <div style={{ height: 2, borderRadius: 2, background: 'rgba(250,226,208,0.14)', overflow: 'hidden' }}>
             <motion.div style={{
               height: '100%',
               transformOrigin: 'left center',
@@ -2175,10 +2176,11 @@ function StatsStrip({ lang }) {
           >
             <div style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 'clamp(2rem, 5vw, 2.9rem)',
-              fontWeight: 900,
-              color: 'var(--gold-light)',
-              textShadow: '0 0 26px rgba(245,158,11,0.35), 0 0 60px rgba(34,211,238,0.18)',
+              fontSize: 'clamp(2rem, 5vw, 2.8rem)',
+              fontWeight: 700,
+              background: 'var(--title-grad)',
+              WebkitBackgroundClip: 'text', backgroundClip: 'text',
+              color: 'transparent',
               lineHeight: 1.1,
             }}>
               {/* nowrap + smaller suffix keeps every stat on one line, so all
@@ -2645,11 +2647,12 @@ function HeroSection({ onOrder, lang }) {
           }}
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'clamp(4.5rem, 16vw, 9rem)',
-            fontWeight: 900, lineHeight: 0.92,
-            color: 'var(--cream)',
-            margin: '0 0 0.3em',
-            letterSpacing: '-0.01em',
+            fontSize: 'clamp(4.2rem, 15vw, 8.6rem)',
+            fontWeight: 700, lineHeight: 1,
+            color: 'var(--head)',
+            margin: '0 0 0.25em',
+            letterSpacing: '0.03em',
+            filter: 'drop-shadow(0 6px 22px rgba(232,67,94,0.35))',
             display: 'flex',
             justifyContent: 'center',
           }}
@@ -2668,9 +2671,10 @@ function HeroSection({ onOrder, lang }) {
               style={{
                 display: 'inline-block',
                 transformOrigin: 'bottom',
-                // the first two letters (П/P + Л/L) were nearly touching
-                marginRight: i === 0 ? '0.05em' : 0,
-                textShadow: '0 0 40px rgba(245,158,11,0.4), 0 0 90px rgba(34,211,238,0.22)',
+                // saffron → pomegranate, like fire under the kazan
+                background: 'var(--title-grad)',
+                WebkitBackgroundClip: 'text', backgroundClip: 'text',
+                color: 'transparent',
               }}
             >
               {ch}
@@ -2683,10 +2687,10 @@ function HeroSection({ onOrder, lang }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReduced ? 0 : 0.7, delay: 0.42 }}
           style={{
-            fontSize: 'clamp(1.05rem, 3vw, 1.35rem)',
-            fontFamily: 'var(--font-heading)',
-            fontStyle: 'italic', fontWeight: 400,
-            color: 'rgba(253,245,230,0.8)',
+            fontSize: 'clamp(1.12rem, 2.8vw, 1.38rem)',
+            fontFamily: 'var(--font-body)',
+            fontWeight: 500,
+            color: 'rgba(250,226,208,0.8)',
             marginBottom: '2.2rem', lineHeight: 1.45,
           }}
         >
@@ -2707,7 +2711,7 @@ function HeroSection({ onOrder, lang }) {
               style={{
                 position: 'absolute', inset: -6,
                 borderRadius: 18,
-                background: 'radial-gradient(ellipse at center, rgba(245,158,11,0.65) 0%, transparent 70%)',
+                background: 'radial-gradient(ellipse at center, rgba(208,44,74,0.6) 0%, transparent 70%)',
                 filter: 'blur(16px)',
                 zIndex: 0,
                 pointerEvents: 'none',
@@ -2723,14 +2727,14 @@ function HeroSection({ onOrder, lang }) {
               position: 'relative', zIndex: 1,
               padding: '1.05rem 2.8rem',
               borderRadius: 14,
-              border: 'none',
-              background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D4AF37 100%)',
-              color: '#2D1505',
-              fontSize: '1.12rem', fontWeight: 700,
+              background: 'linear-gradient(135deg, #D02C4A 0%, #851329 100%)',
+              border: '1px solid rgba(255,214,170,0.55)',
+              color: '#FAE2D0',
+              fontSize: '1.08rem', fontWeight: 700,
               cursor: 'pointer',
               letterSpacing: '0.04em',
               fontFamily: 'var(--font-body)',
-              boxShadow: '0 8px 36px rgba(212,175,55,0.45)',
+              boxShadow: '0 8px 30px rgba(208,44,74,0.45)',
               transition: 'box-shadow 0.28s',
             }}
           >
@@ -2747,7 +2751,7 @@ function HeroSection({ onOrder, lang }) {
           position: 'absolute', bottom: 32, left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: 6, color: 'rgba(253,245,230,0.8)',
+          gap: 6, color: 'rgba(250,226,208,0.8)',
           textShadow: '0 1px 3px rgba(8,4,16,0.95), 0 0 12px rgba(8,4,16,0.9)',
           fontSize: '0.7rem', letterSpacing: '0.12em',
           textTransform: 'uppercase', fontFamily: 'var(--font-body)',
@@ -2797,9 +2801,9 @@ function LangToggle({ lang, setLang }) {
             letterSpacing: '0.08em',
             fontFamily: 'var(--font-body)',
             background: lang === code
-              ? 'linear-gradient(135deg, #F59E0B, #D4AF37)'
+              ? 'linear-gradient(135deg, #D02C4A 0%, #851329 100%)'
               : 'transparent',
-            color: lang === code ? '#2D1505' : 'rgba(253,245,230,0.7)',
+            color: lang === code ? '#FAE2D0' : 'rgba(250,226,208,0.75)',
             transition: 'background 0.2s, color 0.2s',
           }}
         >
@@ -2849,14 +2853,14 @@ function BootSplash() {
             marginTop: 26,
             fontFamily: 'var(--font-heading)',
             fontSize: '1.6rem', fontWeight: 700,
-            color: 'var(--gold)',
-            letterSpacing: '0.18em', textTransform: 'uppercase',
+            color: 'var(--head)',
+            letterSpacing: '0.16em', textTransform: 'uppercase',
           }}>
             Plov House
           </p>
           <div style={{
             marginTop: 18, width: 130, height: 2, borderRadius: 2,
-            background: 'rgba(253,245,230,0.12)',
+            background: 'rgba(250,226,208,0.12)',
             overflow: 'hidden', position: 'relative',
           }}>
             <motion.div
@@ -2968,8 +2972,8 @@ export default function App() {
           border: '1px solid rgba(212,175,55,0.22)',
         }}>
           <h3 style={{
-            fontFamily: 'var(--font-heading)', fontSize: '1.15rem', fontWeight: 700,
-            color: 'var(--gold)', marginBottom: '0.9rem',
+            fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 700,
+            color: 'var(--head)', marginBottom: '0.9rem',
           }}>
             {t.ingredientsTitle}
           </h3>
@@ -2981,8 +2985,8 @@ export default function App() {
               <li key={item} style={{
                 padding: '0.35rem 0.85rem', borderRadius: 99,
                 fontSize: '0.86rem', color: 'var(--text)',
-                background: 'rgba(253,245,230,0.07)',
-                border: '1px solid rgba(253,245,230,0.14)',
+                background: 'rgba(250,226,208,0.07)',
+                border: '1px solid rgba(250,226,208,0.14)',
               }}>
                 {item}
               </li>
@@ -3033,7 +3037,7 @@ export default function App() {
                 textAlign: 'center',
                 padding: '2.2rem 1.6rem',
                 borderRadius: 18,
-                background: 'rgba(253,245,230,0.055)',
+                background: 'rgba(250,226,208,0.055)',
                 border: '1px solid rgba(212,175,55,0.18)',
               }}
             >
@@ -3060,15 +3064,16 @@ export default function App() {
 
               <h3 style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: '1.18rem', fontWeight: 600,
-                color: 'var(--cream)',
+                fontSize: '1.3rem', fontWeight: 600,
+                lineHeight: 1.3,
+                color: 'var(--head)',
                 marginBottom: '0.65rem',
               }}>
                 {step.title[lang]}
               </h3>
 
               <p style={{
-                fontSize: '0.9rem', color: 'rgba(253,245,230,0.68)',
+                fontSize: '0.9rem', color: 'rgba(250,226,208,0.68)',
                 lineHeight: 1.65,
               }}>
                 {step.desc[lang]}
@@ -3087,12 +3092,12 @@ export default function App() {
               padding: '1rem 2.6rem',
               borderRadius: 13,
               border: 'none',
-              background: 'linear-gradient(135deg, #F59E0B, #D4AF37)',
-              color: '#2D1505',
+              background: 'linear-gradient(135deg, #D02C4A 0%, #851329 100%)',
+              color: '#FAE2D0',
               fontSize: '1.05rem', fontWeight: 700,
               cursor: 'pointer', letterSpacing: '0.04em',
               fontFamily: 'var(--font-body)',
-              boxShadow: '0 6px 28px rgba(212,175,55,0.35)',
+              boxShadow: '0 6px 26px rgba(208,44,74,0.42)',
               transition: 'box-shadow 0.28s',
             }}
           >
@@ -3166,9 +3171,9 @@ export default function App() {
           >
             <p style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 'clamp(1.55rem, 3.8vw, 2.1rem)',
-              fontStyle: 'italic', fontWeight: 400,
-              color: 'var(--text)',
+              fontSize: 'clamp(1.55rem, 3.7vw, 2.1rem)',
+              fontWeight: 500,
+              color: 'var(--head)',
               lineHeight: 1.45,
               marginBottom: '1.6rem',
             }}>
@@ -3220,12 +3225,12 @@ export default function App() {
           <div>
             <h2 style={{
               fontFamily: 'var(--font-heading)',
-              color: 'var(--gold)', fontSize: '1.7rem',
+              color: 'var(--head)', fontSize: '1.7rem',
               fontWeight: 700, marginBottom: '0.4rem',
             }}>
               Plov House
             </h2>
-            <p style={{ color: 'rgba(253,245,230,0.55)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+            <p style={{ color: 'rgba(250,226,208,0.72)', fontSize: '0.9rem', lineHeight: 1.6 }}>
               {t.footerBrandSub}
             </p>
           </div>
@@ -3252,7 +3257,7 @@ export default function App() {
               </svg>
               {t.whereName}
             </p>
-            <p style={{ fontSize: '0.82rem', color: 'rgba(253,245,230,0.45)', marginTop: 4, paddingLeft: 22 }}>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(250,226,208,0.62)', marginTop: 4, paddingLeft: 22 }}>
               {t.whereArea}
             </p>
           </div>
@@ -3262,7 +3267,7 @@ export default function App() {
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               {t.infoLines.map(text => (
                 <li key={text} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  fontSize: '0.9rem', color: 'rgba(253,245,230,0.68)' }}>
+                  fontSize: '0.9rem', color: 'rgba(250,226,208,0.68)' }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%',
                     background: 'var(--saffron)', flexShrink: 0 }} />
                   {text}
@@ -3279,19 +3284,19 @@ export default function App() {
               style={{
                 padding: '0.75rem 1.5rem',
                 borderRadius: 11, border: 'none',
-                background: 'linear-gradient(135deg, #F59E0B, #D4AF37)',
-                color: '#2D1505',
+                background: 'linear-gradient(135deg, #D02C4A 0%, #851329 100%)',
+                color: '#FAE2D0',
                 fontSize: '0.95rem', fontWeight: 700,
                 cursor: 'pointer', letterSpacing: '0.03em',
                 fontFamily: 'var(--font-body)',
                 alignSelf: 'flex-start',
-                boxShadow: '0 4px 20px rgba(212,175,55,0.28)',
+                boxShadow: '0 4px 20px rgba(208,44,74,0.38)',
                 transition: 'box-shadow 0.28s',
               }}
             >
               {t.orderBtn}
             </button>
-            <p style={{ fontSize: '0.8rem', color: 'rgba(253,245,230,0.38)' }}>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(250,226,208,0.58)' }}>
               {t.orderNote}
             </p>
           </div>
@@ -3306,10 +3311,10 @@ export default function App() {
           alignItems: 'center',
           flexWrap: 'wrap', gap: '0.5rem',
         }}>
-          <p style={{ color: 'rgba(253,245,230,0.28)', fontSize: '0.82rem' }}>
+          <p style={{ color: 'rgba(250,226,208,0.5)', fontSize: '0.82rem' }}>
             {t.copyright}
           </p>
-          <p style={{ color: 'rgba(253,245,230,0.28)', fontSize: '0.82rem' }}>
+          <p style={{ color: 'rgba(250,226,208,0.5)', fontSize: '0.82rem' }}>
             {t.location}
           </p>
         </div>
@@ -3322,14 +3327,14 @@ export default function App() {
 const footerHeadSt = {
   fontSize: '0.75rem', fontWeight: 700,
   textTransform: 'uppercase', letterSpacing: '0.1em',
-  color: 'rgba(253,245,230,0.5)',
+  color: 'rgba(250,226,208,0.5)',
   marginBottom: '0.8rem',
   fontFamily: 'var(--font-body)',
 }
 
 const footerLinkSt = {
   display: 'flex', alignItems: 'center', gap: '0.5rem',
-  color: 'rgba(253,245,230,0.72)',
+  color: 'rgba(250,226,208,0.72)',
   textDecoration: 'none',
   fontSize: '0.9rem',
   transition: 'color 0.2s',

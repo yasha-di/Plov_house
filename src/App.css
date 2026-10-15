@@ -6,9 +6,9 @@
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
 }
 
-/* CTA button hover */
+/* CTA button hover — garnet glow */
 .cta-btn:hover {
-  box-shadow: 0 12px 40px rgba(212, 175, 55, 0.55) !important;
+  box-shadow: 0 12px 40px rgba(208, 44, 74, 0.6) !important;
 }
 
 /* Menu card: one-time rise-in (outer) + cursor tilt (inner .plov-tilt).
