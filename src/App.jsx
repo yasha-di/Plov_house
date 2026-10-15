@@ -577,7 +577,8 @@ const INITIAL_LANG = readLanguage()
 
 const STRINGS = {
   en: {
-    docTitle: 'Plov House — real Uzbek plov in Bali',
+    brand: 'Plov House',
+    docTitle: 'Plov House Dior — real Uzbek plov in Bali',
     eyebrow: 'From ancient Uzbekistan — to your table in Bali',
     title: 'PLOV',
     tagline: 'Cooked in an Uzbek kazan over open fire. A IX-century recipe, served in Bali',
@@ -636,7 +637,8 @@ const STRINGS = {
     },
   },
   ru: {
-    docTitle: 'Plov House — настоящий узбекский плов на Бали',
+    brand: 'Plov House',
+    docTitle: 'Пловный Дом Dior — настоящий узбекский плов на Бали',
     eyebrow: 'Из глубины веков — к вашему столу на Бали',
     title: 'ПЛОВ',
     tagline: 'Приготовлен в узбекском казане на открытом огне. Рецепт IX века — теперь на Бали',
@@ -2818,7 +2820,7 @@ function LangToggle({ lang, setLang }) {
 //  BOOT SPLASH — picks up where the instant HTML splash leaves off, then melts
 // ═══════════════════════════════════════════════════════════════════════════
 
-function BootSplash() {
+function BootSplash({ lang }) {
   const prefersReduced = useReducedMotion()
   const [show, setShow] = useState(true)
 
@@ -2855,8 +2857,9 @@ function BootSplash() {
             fontSize: '1.6rem', fontWeight: 700,
             color: 'var(--head)',
             letterSpacing: '0.16em', textTransform: 'uppercase',
+            textAlign: 'center', padding: '0 1rem',
           }}>
-            Plov House
+            {STRINGS[lang].brand}
           </p>
           <div style={{
             marginTop: 18, width: 130, height: 2, borderRadius: 2,
@@ -2916,7 +2919,7 @@ export default function App() {
 
   return (
     <>
-      <BootSplash />
+      <BootSplash lang={lang} />
       <IkatBackground />
       <Skyline />
       <RiceRain />
@@ -3228,7 +3231,7 @@ export default function App() {
               color: 'var(--head)', fontSize: '1.7rem',
               fontWeight: 700, marginBottom: '0.4rem',
             }}>
-              Plov House
+              {t.brand}
             </h2>
             <p style={{ color: 'rgba(250,226,208,0.72)', fontSize: '0.9rem', lineHeight: 1.6 }}>
               {t.footerBrandSub}
