@@ -43,3 +43,28 @@
   text-decoration: underline !important;
   text-underline-offset: 3px;
 }
+
+/* ── Skyline: painted landmarks along the bottom of the screen ── */
+.skyline { --sky-u: min(1vh, 0.6vw); }
+.sky-item {
+  position: absolute;
+  bottom: -1%;
+  left: var(--x);
+  height: calc(var(--sky-u) * var(--h));
+  width: auto;
+  transform: translateX(-50%);
+  max-width: none;
+  user-select: none;
+}
+.sky-ground {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 12%;
+  z-index: 4;
+  background: linear-gradient(180deg, transparent 0%, rgba(12, 8, 28, 0.85) 100%);
+}
+@media (max-width: 640px) {
+  .skyline { --sky-u: min(1vh, 1.15vw); }
+  .sky-item { left: var(--xm); }
+  .sky-desktop-only { display: none; }
+}

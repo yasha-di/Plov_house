@@ -12,6 +12,11 @@ import {
 import './App.css'
 import { useReducedMotion } from './useReducedMotion'
 import { readLanguage, isValidQuantity } from './preferences.mjs'
+import skyKalyan from './assets/skyline/kalyan.webp'
+import skyGurEmir from './assets/skyline/gur-emir.webp'
+import skyRegistan from './assets/skyline/registan.webp'
+import skyIchan from './assets/skyline/ichan-kala.webp'
+import skyChorsu from './assets/skyline/chorsu.webp'
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  ADRAS / ATLAS GEOMETRY — stepped "bodom" diamonds, the signature ikat motif
@@ -427,204 +432,69 @@ function IkatBackground() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  ANCIENT CITY SKYLINE — Registan silhouettes with neon hologram edges
+//  SKYLINE — painted landmarks of Uzbekistan along the bottom of the screen
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ── Authentic girih geometry generators ──────────────────────────────────────
-
-// Khatam — the classic 8-pointed star of two interlaced squares, drawn as one
-// 16-vertex star polygon (inner radius = exact square-intersection point).
-function star8Path(cx, cy, r) {
-  const rIn = r * 0.765
-  let d = ''
-  for (let i = 0; i < 16; i++) {
-    const ang = (Math.PI / 8) * i - Math.PI / 2
-    const rr = i % 2 === 0 ? r : rIn
-    d += (i ? 'L' : 'M') + (cx + rr * Math.cos(ang)).toFixed(1) + ' ' + (cy + rr * Math.sin(ang)).toFixed(1)
-  }
-  return d + 'Z'
-}
-
-// Small rotated square (the "cross" filler between stars in girih bands)
-function diamondPath(cx, cy, r) {
-  return `M${cx} ${cy - r}L${cx + r} ${cy}L${cx} ${cy + r}L${cx - r} ${cy}Z`
-}
-
-// Vertical star-and-diamond chain — the strip ornament on portal pylons
-function starChainPath(cx, ys, starR, diaR) {
-  let d = ''
-  for (let i = 0; i < ys.length; i++) {
-    d += star8Path(cx, ys[i], starR)
-    if (i < ys.length - 1) d += diamondPath(cx, (ys[i] + ys[i + 1]) / 2, diaR)
-  }
-  return d
-}
-
-// Horizontal row of stars joined by diamonds — the portal frieze band
-function starBandPath(xs, y, starR, diaR) {
-  let d = ''
-  for (let i = 0; i < xs.length; i++) {
-    d += star8Path(xs[i], y, starR)
-    if (i < xs.length - 1) d += diamondPath((xs[i] + xs[i + 1]) / 2, y, diaR)
-  }
-  return d
-}
-
-// Kungura — the stepped crenellation crowning every Registan portal
-function kunguraPath(x0, x1, yBase, h = 11, tooth = 16) {
-  let d = `M${x0} ${yBase}`
-  for (let x = x0; x < x1; x += tooth) {
-    d += `L${x + tooth / 2} ${yBase - h}L${x + tooth} ${yBase}`
-  }
-  return d
-}
-
-// A bright light-segment racing along an SVG path. The full ornament stays
-// faintly visible (ghost stroke) and the light draws over it. Glow is faked
-// with a wide translucent under-stroke — no drop-shadow filters, which were
-// the main FPS killer.
-function TracePath({ d, stroke, width = 2 }) {
-  return <path d={d} stroke={stroke} strokeWidth={width} opacity={0.35} fill="none" strokeLinejoin="round" />
-}
+// Hand-painted landmark stickers (transparent WebP, pre-darkened a touch so
+// they never fight the text). Positions are % of the screen width; `h` is a
+// height in skyline units, so the whole row scales with the viewport.
+// `mobile: false` hides a landmark on narrow screens to avoid crowding.
+const SKYLINE = [
+  { id: 'kalyan',   src: skyKalyan,   ratio: 0.237, h: 36, x: '5%',  xm: '7%',  z: 1 },
+  { id: 'chorsu',   src: skyChorsu,   ratio: 2.048, h: 15, x: '19%', z: 2, mobile: false },
+  { id: 'registan', src: skyRegistan, ratio: 2.598, h: 25, x: '46%', xm: '49%', z: 3 },
+  { id: 'ichan',    src: skyIchan,    ratio: 2.208, h: 18, x: '75%', z: 2, mobile: false },
+  { id: 'gur-emir', src: skyGurEmir,  ratio: 0.706, h: 31, x: '92%', xm: '85%', z: 1 },
+]
 
 function Skyline() {
   const prefersReduced = useReducedMotion()
-  const { scrollYProgress } = useScroll()
-  // Layers recede at different speeds as the page scrolls = depth.
-  const yFar = useTransform(scrollYProgress, [0, 1], [0, 46])
-  const yNear = useTransform(scrollYProgress, [0, 1], [0, 110])
+  const { scrollY, scrollYProgress } = useScroll()
+  // The landmarks sink slowly as you scroll (depth) and step back a little
+  // once you leave the first screen, so cards and text stay in focus.
+  // Transform + opacity only — the images are rasterised once.
+  const y = useTransform(scrollYProgress, [0, 1], [0, 110])
+  const opacity = useTransform(scrollY, [0, 700], [1, 0.6])
 
   return (
     <div
       aria-hidden="true"
+      className="skyline"
       style={{
         position: 'fixed',
         left: 0, right: 0, bottom: 0,
-        height: '40vh',
+        height: '42vh',
         pointerEvents: 'none',
         zIndex: 'var(--z-skyline)',
         overflow: 'hidden',
       }}
     >
-      {/* Far ridge of domes — dim, hazy */}
-      <motion.svg
-        viewBox="0 0 1600 300"
-        preserveAspectRatio="xMidYMax slice"
-        style={{
-          position: 'absolute', bottom: -8, left: 0,
-          width: '100%', height: '70%',
-          opacity: 0.85,
-            y: prefersReduced || IS_LITE ? 0 : yFar,
-        }}
-      >
-        <g fill="#1C1336">
-          <rect x="0" y="240" width="1600" height="60" />
-          <rect x="40" y="150" width="90" height="150" />
-          <circle cx="85" cy="150" r="45" />
-          <rect x="200" y="90" width="10" height="210" />
-          <circle cx="205" cy="86" r="8" />
-          <rect x="420" y="170" width="160" height="130" />
-          <circle cx="500" cy="170" r="60" />
-          <rect x="700" y="200" width="300" height="100" />
-          <circle cx="750" cy="200" r="30" />
-          <circle cx="850" cy="200" r="30" />
-          <circle cx="950" cy="200" r="30" />
-          <rect x="1100" y="140" width="120" height="160" />
-          <circle cx="1160" cy="140" r="52" />
-          <rect x="1320" y="80" width="12" height="220" />
-          <circle cx="1326" cy="76" r="9" />
-          <rect x="1420" y="190" width="180" height="110" />
-          <circle cx="1510" cy="190" r="40" />
-        </g>
-      </motion.svg>
-
-      {/* Static neon haze along the horizon (replaces the per-frame
-          drop-shadow filter that was re-rasterising the whole skyline) */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0, height: '34%',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(34,211,238,0.05) 55%, rgba(34,211,238,0.09) 100%)',
-      }} />
-
-      {/* Near silhouette — iwan portal, minarets, ribbed dome, neon edges.
-          Static content + transform-only parallax = rasterised once. */}
-      <motion.svg
-        viewBox="0 0 1600 380"
-        preserveAspectRatio="xMidYMax slice"
-        style={{
-          position: 'absolute', bottom: -10, left: 0,
-          width: '100%', height: '100%',
-          y: prefersReduced ? 0 : yNear,
-        }}
-      >
-        <g fill="#0B0718" stroke="rgba(34,211,238,0.38)" strokeWidth="2">
-          {/* ground */}
-          <rect x="-10" y="340" width="1620" height="50" stroke="none" />
-          <line x1="0" y1="341" x2="1600" y2="341" stroke="rgba(34,211,238,0.3)" strokeWidth="1.5" />
-          {/* left minaret */}
-          <polygon points="150,340 158,100 182,100 190,340" />
-          <path d="M154 100 Q170 62 186 100 Z" />
-          <line x1="170" y1="66" x2="170" y2="48" />
-          {/* grand iwan portal — the arch is a window into the glowing fabric */}
-          <path d="M320 340 L320 120 L640 120 L640 340 L560 340 L560 232 Q560 166 480 148 Q400 166 400 232 L400 340 Z" />
-          <rect x="320" y="120" width="320" height="16" fill="#161030" />
-          {/* ribbed dome on drum */}
-          <rect x="760" y="250" width="180" height="90" />
-          <path d="M760 250 Q760 202 792 186 Q758 150 850 108 Q942 150 908 186 Q940 202 940 250 Z" />
-          <line x1="850" y1="108" x2="850" y2="84" />
-          <circle cx="850" cy="80" r="4" />
-          {/* bazaar row of small domes */}
-          <rect x="1020" y="290" width="260" height="50" />
-          <path d="M1040 290 Q1040 260 1072 250 Q1104 260 1104 290 Z" />
-          <path d="M1124 290 Q1124 260 1156 250 Q1188 260 1188 290 Z" />
-          <path d="M1208 290 Q1208 260 1240 250 Q1272 260 1272 290 Z" />
-          {/* right minaret */}
-          <polygon points="1380,340 1388,120 1410,120 1418,340" />
-          <path d="M1384 120 Q1399 84 1414 120 Z" />
-        </g>
-      </motion.svg>
-
-      {/* Ornament overlay — its dash animations repaint ONLY this mostly
-          transparent svg, never the building silhouettes behind it. */}
-      <motion.svg
-        viewBox="0 0 1600 380"
-        preserveAspectRatio="xMidYMax slice"
-        style={{
-          position: 'absolute', bottom: -10, left: 0,
-          width: '100%', height: '100%',
-          y: prefersReduced ? 0 : yNear,
-        }}
-      >
-        {/* ── Racing light over authentic girih ornaments ──
-            Khatam stars (two interlaced squares), star-and-diamond chains on
-            the pylons, a star frieze across the band, kungura crenellation —
-            the actual ornament vocabulary of Registan madrasahs. */}
-        <g fill="none" strokeLinecap="round">
-          {/* kungura crenellation crowning the portal */}
-          <TracePath d={kunguraPath(320, 640, 118)} stroke="#22D3EE" width={1.8} seg={0.18} duration={5.5} still={IS_LITE} />
-          {/* portal frame loop */}
-          <TracePath d="M320 120 H640 V340 H320 Z" stroke="#22D3EE" width={2.2} seg={0.16} duration={5} delay={0.4} />
-          {/* pointed arch sweep */}
-          <TracePath d="M400 340 V232 Q400 166 480 148 Q560 166 560 232 V340" stroke="#F59E0B" width={2.2} seg={0.2} duration={3.6} delay={0.6} />
-          {/* star frieze across the portal band */}
-          <TracePath d={starBandPath([366, 423, 480, 537, 594], 134, 10, 4.5)} stroke="#FACC15" width={1.4} seg={0.1} duration={7} still={IS_LITE} />
-          {/* khatam star chains on both pylons */}
-          <TracePath d={starChainPath(360, [200, 290], 19, 8)} stroke="#DB2777" width={1.6} seg={0.12} duration={6} delay={0.8} />
-          <TracePath d={starChainPath(600, [200, 290], 19, 8)} stroke="#8B5CF6" width={1.6} seg={0.12} duration={6} delay={2.2} reverse still={IS_LITE} />
-          {/* dome ribs light up one after another */}
-          <TracePath d="M850 108 Q800 180 790 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} still={IS_LITE} />
-          <TracePath d="M850 108 Q850 180 850 250" stroke="#FACC15" width={1.8} seg={0.3} duration={2.8} delay={0.5} still={IS_LITE} />
-          <TracePath d="M850 108 Q900 180 910 250" stroke="#10B981" width={1.8} seg={0.3} duration={2.8} delay={1} still={IS_LITE} />
-          {/* star medallion on the dome drum */}
-          <TracePath d={star8Path(850, 295, 26)} stroke="#F59E0B" width={1.6} seg={0.22} duration={4} delay={1.2} />
-          {/* light climbing the minarets */}
-          <TracePath d="M150 340 L158 100" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} reverse still={IS_LITE} />
-          <TracePath d="M1418 340 L1410 120" stroke="#22D3EE" width={2} seg={0.3} duration={3.4} delay={1.7} reverse still={IS_LITE} />
-          {/* bazaar arcade: domes + a small star under each */}
-          <TracePath d={`M1040 290 Q1040 260 1072 250 Q1104 260 1104 290 ${star8Path(1072, 315, 11)}`} stroke="#FACC15" width={1.5} seg={0.25} duration={3.4} still={IS_LITE} />
-          <TracePath d={`M1124 290 Q1124 260 1156 250 Q1188 260 1188 290 ${star8Path(1156, 315, 11)}`} stroke="#DB2777" width={1.5} seg={0.25} duration={3.4} delay={0.7} still={IS_LITE} />
-          <TracePath d={`M1208 290 Q1208 260 1240 250 Q1272 260 1272 290 ${star8Path(1240, 315, 11)}`} stroke="#22D3EE" width={1.5} seg={0.25} duration={3.4} delay={1.4} still={IS_LITE} />
-        </g>
-      </motion.svg>
+      <motion.div style={{
+        position: 'absolute', inset: 0,
+        y: prefersReduced ? 0 : y,
+        opacity: prefersReduced ? 1 : opacity,
+        willChange: 'transform, opacity',
+      }}>
+        {SKYLINE.map((b) => (
+          <img
+            key={b.id}
+            src={b.src}
+            alt=""
+            decoding="async"
+            draggable="false"
+            className={`sky-item${b.mobile === false ? ' sky-desktop-only' : ''}`}
+            style={{
+              '--x': b.x,
+              '--xm': b.xm ?? b.x,
+              '--h': b.h,
+              aspectRatio: String(b.ratio),
+              zIndex: b.z,
+            }}
+          />
+        ))}
+        {/* soft ground shadow that anchors the buildings to the bottom edge */}
+        <div className="sky-ground" />
+      </motion.div>
     </div>
   )
 }
@@ -731,7 +601,7 @@ const STRINGS = {
     whereName: 'Wherever someone misses plov',
     whereArea: 'Bali, Indonesia',
     infoHead: 'Service',
-    infoLines: ['Canggu · Ubud · Uluwatu · Sanur', 'Delivery · chef on-site', 'Order 1–2 days ahead', 'Monday & Thursday'],
+    infoLines: ['Canggu · Ubud · Uluwatu · Sanur', 'Delivery · chef on-site', 'Order 1–2 days ahead', 'Mon & Thu — fresh plov by the portion'],
     orderHead: 'Order',
     orderBtn: 'Place an order',
     orderNote: 'Minimum order — 25 portions · chef on-site by booking',
@@ -746,11 +616,11 @@ const STRINGS = {
     formats: {
       kazan: 'Big kazan — from 25 portions',
       chef: 'Chef on-site — villa / event',
-      small: 'Small order — ask availability',
+      small: 'By the portion — Mon & Thu',
     },
     mQtyPortions: 'How many portions',
     mQtyHintBig: 'Minimum 25 portions. Order 1–2 days ahead — plov cooks for 5–6 hours.',
-    mQtyHintSmall: 'Small orders depend on availability — we will confirm in chat.',
+    mQtyHintSmall: 'Portions are cooked on Mondays and Thursdays — we will confirm the details in chat.',
     ingredientsTitle: 'What goes into our kazan',
     ingredients: ['Rice', 'Beef', 'Carrots', 'Onions', 'Oil', 'Chickpeas', 'Kishmish raisins', 'Garlic', 'Cumin straight from Tashkent’s Chorsu Bazaar', 'Salt & pepper'],
     mWa: 'Order in WhatsApp',
@@ -790,7 +660,7 @@ const STRINGS = {
     whereName: 'Там, где человек скучает по плову',
     whereArea: 'Бали, Индонезия',
     infoHead: 'Сервис',
-    infoLines: ['Чангу · Убуд · Улувату · Санур', 'Доставка · шеф на месте', 'Заказ за 1–2 дня', 'Понедельник и четверг'],
+    infoLines: ['Чангу · Убуд · Улувату · Санур', 'Доставка · шеф на месте', 'Заказ за 1–2 дня', 'Пн и чт — свежий плов порциями'],
     orderHead: 'Заказать',
     orderBtn: 'Оформить заказ',
     orderNote: 'Минимальный заказ — 25 порций · шеф на месте по записи',
@@ -805,11 +675,11 @@ const STRINGS = {
     formats: {
       kazan: 'Большой казан — от 25 порций',
       chef: 'Шеф на месте — вилла / праздник',
-      small: 'Малый заказ — уточнить наличие',
+      small: 'Порциями — понедельник и четверг',
     },
     mQtyPortions: 'Сколько порций',
     mQtyHintBig: 'Минимум 25 порций. Заказывайте за 1–2 дня — плов готовится 5–6 часов.',
-    mQtyHintSmall: 'Небольшие заказы — по наличию, уточним в чате.',
+    mQtyHintSmall: 'Порциями готовим по понедельникам и четвергам — детали уточним в чате.',
     ingredientsTitle: 'Что кладём в казан',
     ingredients: ['Рис', 'Говядина', 'Морковь', 'Лук', 'Масло', 'Нут', 'Изюм (кишмиш)', 'Чеснок', 'Зира прямо из Узбекистана — с базара Чорсу', 'Соль и перец'],
     mWa: 'Заказать в WhatsApp',
@@ -898,10 +768,10 @@ const SERVICES = [
   },
   {
     num: '03',
-    title: { en: 'Just a few portions?', ru: 'Нужна пара порций?' },
+    title: { en: 'Plov by the portion · Mon & Thu', ru: 'Плов порциями · пн и чт' },
     desc: {
-      en: 'Small portion orders are not always available. Message us in WhatsApp or Telegram to find out the details.',
-      ru: 'Порционные заказы бывают не всегда. Напишите нам в WhatsApp или Telegram — расскажем подробности.',
+      en: 'Every Monday and Thursday we cook a kazan — on those days you can order plov by the portion. Message us in WhatsApp or Telegram for the details.',
+      ru: 'Каждый понедельник и четверг мы готовим казан — в эти дни плов можно заказать порциями. Напишите нам в WhatsApp или Telegram, чтобы узнать подробности.',
     },
     Icon: () => (
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
@@ -2877,7 +2747,8 @@ function HeroSection({ onOrder, lang }) {
           position: 'absolute', bottom: 32, left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: 6, color: 'rgba(253,245,230,0.35)',
+          gap: 6, color: 'rgba(253,245,230,0.8)',
+          textShadow: '0 1px 3px rgba(8,4,16,0.95), 0 0 12px rgba(8,4,16,0.9)',
           fontSize: '0.7rem', letterSpacing: '0.12em',
           textTransform: 'uppercase', fontFamily: 'var(--font-body)',
           pointerEvents: 'none',
